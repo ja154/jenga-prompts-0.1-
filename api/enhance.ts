@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { userPrompt } = body;
 
-    // Construct the Gemini-compatible payload
     const geminiPayload = {
       contents: [
         {
