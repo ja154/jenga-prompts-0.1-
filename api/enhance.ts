@@ -5,7 +5,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { OutputStructure, PromptMode } from '../types';
 
 // The API key is now securely on the server.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // This function is copied from the original geminiService.ts
 function buildSystemInstruction(mode: string, options: Record<string, any>): string {
@@ -89,20 +89,20 @@ async function getEnhancedPromptInternal({
     const isSimpleJson = options.outputStructure === OutputStructure.SimpleJSON;
     const isDetailedJson = options.outputStructure === OutputStructure.DetailedJSON;
 
-    const config: any = {
+    const generationConfig: any = {
         temperature: 0.7,
         topP: 0.95,
         topK: 40,
     };
 
     if (isSimpleJson || isDetailedJson) {
-        config.responseMimeType = "application/json";
+        generationConfig.responseMimeType = "application/json";
 
         if (isSimpleJson) {
-            config.responseSchema = {
+            generationConfig.responseSchema = {
                 type: Type.OBJECT,
                 properties: {
-                    prompt: { 
+                    prompt: {
                         type: Type.STRING,
                         description: "The expertly crafted prompt string."
                     },
@@ -151,12 +151,12 @@ async function getEnhancedPromptInternal({
                     };
                     break;
             }
-            
-            config.responseSchema = {
+
+            generationConfig.responseSchema = {
                 type: Type.OBJECT,
                 properties: {
                     basePrompt: { type: Type.STRING, description: "The original user's core idea." },
-                    modifiers: { 
+                    modifiers: {
                         type: Type.OBJECT,
                         properties: modifierProperties,
                     },
@@ -169,16 +169,19 @@ async function getEnhancedPromptInternal({
 
 
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: userPrompt,
-            config: {
-                ...config,
-                systemInstruction: systemInstruction,
-            },
+        const model = ai.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            systemInstruction: systemInstruction,
         });
 
-        const rawText = response.text;
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: generationConfig,
+        });
+
+        const response = result.response;
+        const rawText = response.text();
+
         let primaryResult: string;
         let jsonResult: string | undefined;
 
