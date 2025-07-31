@@ -15,12 +15,12 @@ export async function getEnhancedPrompt({
     body: JSON.stringify({ userPrompt, mode, options }),
   });
 
-  const rawText = await res.text(); // read once
+  const rawText = await res.text();
 
   let body: any;
   try {
     body = JSON.parse(rawText);
-  } catch (err) {
+  } catch {
     throw new Error(`Non-JSON response: ${rawText}`);
   }
 
