@@ -10,16 +10,16 @@ const GEMINI_PROXY_URL = 'https://jengaprompts-pro-197311920382.us-west1.run.app
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userPrompt, mode, options } = body;
+    const { userPrompt } = body;
 
+    // Construct the Gemini-compatible payload
     const geminiPayload = {
       contents: [
         {
           role: 'user',
           parts: [{ text: userPrompt }]
         }
-      ],
-      ...options
+      ]
     };
 
     const geminiRes = await fetch(GEMINI_PROXY_URL, {
