@@ -87,10 +87,6 @@ const App = () => {
 
     const inputSectionRef = useRef<HTMLElement>(null);
 
-    // Template state
-    const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
-    const [placeholderValues, setPlaceholderValues] = useState<Record<string, string>>({});
-
     // Shared state
     const [contentTone, setContentTone] = useState<ContentTone>(ContentTone.Neutral);
     const [outputStructure, setOutputStructure] = useState<OutputStructure>(OutputStructure.Paragraph);
@@ -132,44 +128,13 @@ const App = () => {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
     };
     
-    const placeholderRegex = /\[prompt_input placeholder="([^"]+)"\]/g;
-    const getLabelFromPlaceholder = (p: string) => p.match(/placeholder="([^"]+)"/)?.[1] || '';
-
     const handleUseTemplate = useCallback((template: PromptTemplate) => {
         setPromptMode(template.mode);
-        setActiveTemplate(template.prompt);
-    
-        const placeholders = template.prompt.match(placeholderRegex);
-        const initialValues: Record<string, string> = {};
-        if (placeholders) {
-            placeholders.forEach(p => {
-                initialValues[p] = '';
-            });
-        }
-        setPlaceholderValues(initialValues);
-        setUserPrompt(''); // Clear previous manual prompt
-    
+        setUserPrompt(template.prompt);
         setTimeout(() => {
             inputSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     }, []);
-
-    const handleClearTemplate = useCallback(() => {
-        setActiveTemplate(null);
-        setPlaceholderValues({});
-    }, []);
-
-    useEffect(() => {
-        if (activeTemplate) {
-            let newPrompt = activeTemplate;
-            for (const placeholder in placeholderValues) {
-                const value = placeholderValues[placeholder];
-                const fallback = `[${getLabelFromPlaceholder(placeholder) || '...'}]`;
-                newPrompt = newPrompt.split(placeholder).join(value || fallback);
-            }
-            setUserPrompt(newPrompt);
-        }
-    }, [activeTemplate, placeholderValues]);
 
     const handleGenerateClick = useCallback(async () => {
         if (!userPrompt.trim()) return;
@@ -179,6 +144,7 @@ const App = () => {
         setPrimaryResult('');
         setJsonResult(undefined);
         setActiveOutputTab('result');
+
 
         let options: Record<string, any> = {};
         let loadingMsg = 'Our AI is enhancing your prompt...';
@@ -276,10 +242,7 @@ const App = () => {
                 {modeOptions.map(({ mode, icon }) => (
                     <button
                         key={mode}
-                        onClick={() => {
-                            setPromptMode(mode);
-                            handleClearTemplate();
-                        }}
+                        onClick={() => setPromptMode(mode)}
                         className={`flex flex-col sm:flex-row items-center justify-center gap-2 px-2 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 ${promptMode === mode ? 'bg-purple-600 text-white shadow-md' : 'text-slate-600 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-gray-700'}`}
                         aria-pressed={promptMode === mode}
                     >
@@ -391,63 +354,15 @@ const App = () => {
                 
                 <div className="mb-4">
                     <label htmlFor="userPrompt" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Your Core Idea or Concept</label>
-                    <div className="relative">
-                        <textarea 
-                            id="userPrompt"
-                            className={`w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all h-28 ${!!activeTemplate ? 'text-gray-500 dark:text-gray-400 select-none' : ''}`}
-                            placeholder="E.g., An astronaut riding a horse, a function to calculate fibonacci, a sad piano melody..."
-                            value={userPrompt}
-                            onChange={(e) => {
-                                if (!activeTemplate) {
-                                    setUserPrompt(e.target.value);
-                                }
-                            }}
-                            readOnly={!!activeTemplate}
-                            aria-label="Describe your core concept"
-                        ></textarea>
-                         {activeTemplate && (
-                            <div className="absolute inset-0 bg-slate-200/50 dark:bg-gray-900/50 flex items-center justify-center text-center p-4 rounded-lg backdrop-blur-sm">
-                                <p className="text-sm text-slate-600 dark:text-gray-400">
-                                    Edit template values below. <br/>
-                                    <button 
-                                        onClick={handleClearTemplate}
-                                        className="font-semibold text-purple-600 dark:text-purple-400 hover:underline"
-                                    >
-                                        Edit Manually
-                                    </button>
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                    <textarea 
+                        id="userPrompt"
+                        className="w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all h-28"
+                        placeholder="E.g., An astronaut riding a horse, a function to calculate fibonacci, a sad piano melody..."
+                        value={userPrompt}
+                        onChange={(e) => setUserPrompt(e.target.value)}
+                        aria-label="Describe your core concept"
+                    ></textarea>
                 </div>
-
-                {activeTemplate && (
-                    <div className="mb-4 space-y-3 p-4 bg-slate-200/50 dark:bg-gray-900/40 rounded-xl animate-fade-in">
-                        <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-semibold text-slate-700 dark:text-gray-300">Template Inputs</h4>
-                            <button 
-                                onClick={handleClearTemplate}
-                                className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline"
-                            >
-                                Clear Template
-                            </button>
-                        </div>
-                        {Object.keys(placeholderValues).map(placeholder => (
-                            <div key={placeholder}>
-                                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400 mb-1 capitalize">
-                                    {getLabelFromPlaceholder(placeholder)}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={placeholderValues[placeholder]}
-                                    onChange={(e) => setPlaceholderValues(prev => ({...prev, [placeholder]: e.target.value}))}
-                                    className="w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    placeholder={getLabelFromPlaceholder(placeholder)}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                )}
                 
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Step 2: Add Modifiers</label>
