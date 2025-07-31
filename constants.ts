@@ -1,4 +1,4 @@
-import { ContentTone, PointOfView, AspectRatio, ImageStyle, Lighting, Framing, CameraAngle, CameraResolution, AudioType, AudioVibe, CodeLanguage, CodeTask, OutputStructure } from '@/types';
+import { ContentTone, PointOfView, AspectRatio, ImageStyle, Lighting, Framing, CameraAngle, CameraResolution, AudioType, AudioVibe, CodeLanguage, CodeTask, OutputStructure } from './types';
 
 export const TONE_OPTIONS = Object.values(ContentTone);
 export const POV_OPTIONS = Object.values(PointOfView);

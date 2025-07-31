@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Type } from "@google/genai";
-import { OutputStructure, PromptMode } from '@/types';
+import { OutputStructure, PromptMode } from '../types';
 
 // The API key is now securely on the server.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
