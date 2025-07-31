@@ -1,4 +1,4 @@
-import { EnhancedPromptResult } from '../types';
+import { EnhancedPromptResult } from '@/types';
 
 export async function getEnhancedPrompt({
   userPrompt,

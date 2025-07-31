@@ -1,4 +1,4 @@
-import { PromptMode } from './types';
+import { PromptMode } from '@/types';
 
 export interface PromptTemplate {
   title: string;
