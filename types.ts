@@ -58,6 +58,8 @@ export enum ImageStyle {
   Watercolor = 'Watercolor',
   Cyberpunk = 'Cyberpunk',
   Minimalist = 'Minimalist',
+  Polaroid = 'Polaroid',
+  ClassicAnimation = 'Classic Animation',
 }
 
 export enum Lighting {
@@ -71,7 +73,7 @@ export enum Lighting {
 
 export enum Framing {
   TightShot = 'Tight Shot',
-  MediumShot = 'Medium Shot',
+  MediumShot = 'MediumShot',
   FullBodyShot = 'Full Body Shot',
   EstablishingShot = 'Establishing Shot',
   Cinematic = 'Cinematic',
