@@ -15,15 +15,25 @@ export async function getEnhancedPrompt({
     body: JSON.stringify({ userPrompt, mode, options }),
   });
 
-  let body: any;
-  try {
-    body = await res.json();
-  } catch (err) {
-    const text = await res.text();
-    throw new Error(`Non-JSON response: ${text}`);
+  if (!res.ok) {
+    // The response is an error. Read the body as text.
+    const errorText = await res.text();
+    // Try to parse it as JSON to get a structured error message.
+    try {
+      const errorJson = JSON.parse(errorText);
+      // Use the error message from the JSON if available, otherwise use the raw text.
+      throw new Error(errorJson?.error || errorText);
+    } catch (e) {
+      // If parsing fails, the error response was not JSON. Throw the text content.
+      throw new Error(errorText || `Request failed with status ${res.status}`);
+    }
   }
 
-  if (!res.ok || !body?.success) {
+  // If we reach here, res.ok was true. We can expect a JSON body.
+  const body = await res.json();
+
+  if (!body?.success) {
+    // This handles cases where the status is 200 OK, but our backend logic returned success: false
     throw new Error(body?.error || 'An error occurred while enhancing the prompt.');
   }
 
