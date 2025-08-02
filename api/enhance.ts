@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getEnhancedPrompt } from '../services/geminiService.ts';
+import { getEnhancedPrompt } from '../services/geminiService.js';
 
 export const config = {
   runtime: 'nodejs',
