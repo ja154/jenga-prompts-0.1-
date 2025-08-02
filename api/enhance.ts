@@ -65,14 +65,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error: any) {
     console.error('Error in /api/enhance:', error);
     const message = error.message || 'An unknown server error occurred.';
+    const debugInfo = process.env.NODE_ENV !== 'production' ? error.stack : undefined;
 
     // If headers are already sent, we must send the error through the stream
     if (res.headersSent) {
-      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: message, debug: debugInfo })}\n\n`);
       res.end();
     } else {
       // If headers are not sent, we can send a proper HTTP error response
-      res.status(500).json({ error: message });
+      res.status(500).json({ error: message, debug: debugInfo });
     }
   }
 }
