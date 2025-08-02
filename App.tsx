@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { getEnhancedPrompt } from './services/geminiService';
 import { TONE_OPTIONS, POV_OPTIONS, ASPECT_RATIO_OPTIONS, IMAGE_STYLE_OPTIONS, LIGHTING_OPTIONS, FRAMING_OPTIONS, CAMERA_ANGLE_OPTIONS, CAMERA_RESOLUTION_OPTIONS, TEXT_FORMAT_OPTIONS, AUDIO_TYPE_OPTIONS, AUDIO_VIBE_OPTIONS, CODE_LANGUAGE_OPTIONS, CODE_TASK_OPTIONS, OUTPUT_STRUCTURE_OPTIONS } from './constants';
 import { ContentTone, PointOfView, PromptMode, AspectRatio, ImageStyle, Lighting, Framing, CameraAngle, CameraResolution, AudioType, AudioVibe, CodeLanguage, CodeTask, OutputStructure } from './types';
 import { templates, PromptTemplate } from './templates';
@@ -7,10 +6,10 @@ import { templates, PromptTemplate } from './templates';
 const ThemeToggle = ({ theme, toggleTheme }) => (
     <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50" aria-label="Toggle theme">
         <label className="switch">
-            <input 
-                type="checkbox" 
-                onChange={toggleTheme} 
-                checked={theme === 'light'} 
+            <input
+                type="checkbox"
+                onChange={toggleTheme}
+                checked={theme === 'light'}
                 aria-label="theme toggle checkbox"
             />
             <span className="slider">
@@ -59,7 +58,7 @@ const PromptLibrary = ({ onUseTemplate }: { onUseTemplate: (template: PromptTemp
                     <div key={index} className="bg-slate-100 dark:bg-gray-800/50 hover:bg-slate-200 dark:hover:bg-gray-800/70 p-6 rounded-xl transition-all transform hover:-translate-y-1 flex flex-col">
                         <h3 className="text-lg font-semibold mb-2 text-slate-800 dark:text-white">{template.title}</h3>
                         <p className="text-slate-600 dark:text-gray-400 text-sm mb-4 flex-grow">{template.description}</p>
-                        <button 
+                        <button
                             onClick={() => onUseTemplate(template)}
                             className="mt-auto bg-purple-500/80 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm flex items-center justify-center"
                         >
@@ -90,7 +89,7 @@ const App = () => {
     // Shared state
     const [contentTone, setContentTone] = useState<ContentTone>(ContentTone.Neutral);
     const [outputStructure, setOutputStructure] = useState<OutputStructure>(OutputStructure.Paragraph);
-    
+
     // Video state
     const [pov, setPov] = useState<PointOfView>(PointOfView.ThirdPerson);
     const [videoResolution, setVideoResolution] = useState<CameraResolution>(CameraResolution.FourK);
@@ -106,7 +105,7 @@ const App = () => {
 
     // Text state
     const [outputFormat, setOutputFormat] = useState('Plain Text');
-    
+
     // Audio state
     const [audioType, setAudioType] = useState<AudioType>(AudioType.Music);
     const [audioVibe, setAudioVibe] = useState<AudioVibe>(AudioVibe.Atmospheric);
@@ -127,7 +126,7 @@ const App = () => {
     const toggleTheme = () => {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
     };
-    
+
     const handleUseTemplate = useCallback((template: PromptTemplate) => {
         setPromptMode(template.mode);
         setUserPrompt(template.prompt);
@@ -138,13 +137,12 @@ const App = () => {
 
     const handleGenerateClick = useCallback(async () => {
         if (!userPrompt.trim()) return;
-        
+
         setIsLoading(true);
         setError('');
         setPrimaryResult('');
         setJsonResult(undefined);
         setActiveOutputTab('result');
-
 
         let options: Record<string, any> = {};
         let loadingMsg = 'Our AI is enhancing your prompt...';
@@ -173,24 +171,85 @@ const App = () => {
         }
 
         setLoadingMessage(loadingMsg);
-        
+        let accumulatedText = '';
+
         try {
-            const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options });
-            setPrimaryResult(result.primaryResult);
-            setJsonResult(result.jsonResult);
+            const response = await fetch('/api/enhance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userPrompt, mode: promptMode, options }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            if (!response.body) {
+                throw new Error('Response body is null');
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const decodedChunk = decoder.decode(value, { stream: true });
+                const lines = decodedChunk.split('\n\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data:')) {
+                        const dataContent = line.substring(5).trim();
+                        try {
+                            const parsed = JSON.parse(dataContent);
+                            if (parsed.error) {
+                                throw new Error(parsed.error);
+                            }
+                            if (parsed.chunk) {
+                                accumulatedText += parsed.chunk;
+                                setPrimaryResult(prev => prev + parsed.chunk);
+                            }
+                        } catch (e) {
+                            console.error("Failed to parse stream data chunk:", dataContent, e);
+                        }
+                    }
+                }
+            }
+
+            // After streaming is complete, process the final result
+            if (outputStructure === OutputStructure.SimpleJSON || outputStructure === OutputStructure.DetailedJSON) {
+                try {
+                    const parsedJson = JSON.parse(accumulatedText);
+                    const finalPrompt = outputStructure === OutputStructure.DetailedJSON ? parsedJson.fullPrompt : parsedJson.prompt;
+                    setPrimaryResult(finalPrompt || accumulatedText);
+                    setJsonResult(JSON.stringify(parsedJson, null, 2));
+                } catch (e) {
+                    console.error("Failed to parse final JSON:", accumulatedText, e);
+                    setError("The model returned a malformed JSON. Please try again.");
+                    setPrimaryResult(accumulatedText); // show the raw text
+                }
+            } else {
+                 setPrimaryResult(accumulatedText);
+                 setJsonResult(undefined);
+            }
+
+
         } catch (err) {
             console.error('Error during generation:', err);
             const message = err instanceof Error ? err.message : 'An unknown error occurred.';
             setError(message);
+            setPrimaryResult(accumulatedText); // Show what we have so far
         } finally {
             setIsLoading(false);
             setLoadingMessage('');
         }
     }, [
-        userPrompt, promptMode, contentTone, pov, videoResolution, imageStyle, 
+        userPrompt, promptMode, contentTone, pov, videoResolution, imageStyle,
         lighting, framing, cameraAngle, imageResolution, aspectRatio, additionalDetails,
         outputFormat, audioType, audioVibe, codeLanguage, codeTask, outputStructure
     ]);
+
 
     const handleCopyToClipboard = useCallback(() => {
         const contentToCopy = activeOutputTab === 'json' ? jsonResult : primaryResult;
@@ -208,7 +267,7 @@ const App = () => {
         return 'Enhance Prompt';
     }, [isLoading]);
 
-    const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {label: string, value: string}[] | string[]) => (
+    const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: { label: string, value: string }[] | string[]) => (
         <div>
             <label htmlFor={id} className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">{label}</label>
             <select
@@ -219,7 +278,7 @@ const App = () => {
                 aria-label={`Select ${label}`}
             >
                 {options.map(option => (
-                    typeof option === 'string' 
+                    typeof option === 'string'
                         ? <option key={option} value={option}>{option}</option>
                         : <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
@@ -234,7 +293,7 @@ const App = () => {
         { mode: PromptMode.Audio, icon: 'fa-music' },
         { mode: PromptMode.Code, icon: 'fa-code' },
     ];
-    
+
     const PromptModeSelector = () => (
         <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Select Prompt Mode</label>
@@ -258,7 +317,7 @@ const App = () => {
         switch (promptMode) {
             case PromptMode.Text:
                 return (
-                     <div className="space-y-4">
+                    <div className="space-y-4">
                         {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
                         {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
                         {renderSelect("outputFormat", "Desired Text Format", outputFormat, (e) => setOutputFormat(e.target.value), TEXT_FORMAT_OPTIONS)}
@@ -267,21 +326,21 @@ const App = () => {
             case PromptMode.Image:
                 return (
                     <div className="space-y-4">
-                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
-                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                           {renderSelect("contentTone", "Content Tone / Mood", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
-                           {renderSelect("imageStyle", "Style", imageStyle, (e) => setImageStyle(e.target.value as ImageStyle), IMAGE_STYLE_OPTIONS)}
-                           {renderSelect("aspectRatio", "Aspect Ratio", aspectRatio, (e) => setAspectRatio(e.target.value as AspectRatio), ASPECT_RATIO_OPTIONS)}
-                           {renderSelect("lighting", "Lighting", lighting, (e) => setLighting(e.target.value as Lighting), LIGHTING_OPTIONS)}
-                           {renderSelect("framing", "Framing", framing, (e) => setFraming(e.target.value as Framing), FRAMING_OPTIONS)}
-                           {renderSelect("cameraAngle", "Camera Angle", cameraAngle, (e) => setCameraAngle(e.target.value as CameraAngle), CAMERA_ANGLE_OPTIONS)}
-                           {renderSelect("imageResolution", "Detail Level", imageResolution, (e) => setImageResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
+                            {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {renderSelect("contentTone", "Content Tone / Mood", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
+                            {renderSelect("imageStyle", "Style", imageStyle, (e) => setImageStyle(e.target.value as ImageStyle), IMAGE_STYLE_OPTIONS)}
+                            {renderSelect("aspectRatio", "Aspect Ratio", aspectRatio, (e) => setAspectRatio(e.target.value as AspectRatio), ASPECT_RATIO_OPTIONS)}
+                            {renderSelect("lighting", "Lighting", lighting, (e) => setLighting(e.target.value as Lighting), LIGHTING_OPTIONS)}
+                            {renderSelect("framing", "Framing", framing, (e) => setFraming(e.target.value as Framing), FRAMING_OPTIONS)}
+                            {renderSelect("cameraAngle", "Camera Angle", cameraAngle, (e) => setCameraAngle(e.target.value as CameraAngle), CAMERA_ANGLE_OPTIONS)}
+                            {renderSelect("imageResolution", "Detail Level", imageResolution, (e) => setImageResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
                         </div>
                         <div>
-                             <label htmlFor="additionalDetails" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Additional Details (Optional)</label>
-                             <input 
+                            <label htmlFor="additionalDetails" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Additional Details (Optional)</label>
+                            <input
                                 id="additionalDetails"
                                 type="text"
                                 className="w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
@@ -297,10 +356,10 @@ const App = () => {
                 return (
                     <div className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
-                           {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
+                            {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
+                            {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
                         </div>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {renderSelect("pov", "Point of View", pov, (e) => setPov(e.target.value as PointOfView), POV_OPTIONS)}
                             {renderSelect("videoResolution", "Detail Level", videoResolution, (e) => setVideoResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
                         </div>
@@ -308,7 +367,7 @@ const App = () => {
                 );
             case PromptMode.Audio:
                 return (
-                     <div className="space-y-4">
+                    <div className="space-y-4">
                         {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
@@ -318,8 +377,8 @@ const App = () => {
                     </div>
                 );
             case PromptMode.Code:
-                 return (
-                     <div className="space-y-4">
+                return (
+                    <div className="space-y-4">
                         {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {renderSelect("codeLanguage", "Language", codeLanguage, (e) => setCodeLanguage(e.target.value as CodeLanguage), CODE_LANGUAGE_OPTIONS)}
@@ -338,11 +397,11 @@ const App = () => {
             <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
             {/* Input section */}
             <section ref={inputSectionRef} role="region" aria-labelledby="input-heading" className="glass rounded-2xl p-4 sm:p-6 fade-in" style={{ animationDelay: '0.4s' }}>
-                 <h2 id="input-heading" className="text-xl font-semibold flex items-center mb-4">
+                <h2 id="input-heading" className="text-xl font-semibold flex items-center mb-4">
                     <i className="fas fa-keyboard mr-2 text-purple-500 dark:text-purple-400"></i>
                     Step 1: Define Your Prompt
                 </h2>
-                
+
                 {error && (
                     <div className="bg-red-100 dark:bg-red-800/50 border border-red-400 dark:border-red-700 p-3 rounded-lg text-red-700 dark:text-red-200 mb-4" role="alert">
                         <p className="font-semibold text-sm">An error occurred:</p>
@@ -351,10 +410,10 @@ const App = () => {
                 )}
 
                 <PromptModeSelector />
-                
+
                 <div className="mb-4">
                     <label htmlFor="userPrompt" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Your Core Idea or Concept</label>
-                    <textarea 
+                    <textarea
                         id="userPrompt"
                         className="w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all h-28"
                         placeholder="E.g., An astronaut riding a horse, a function to calculate fibonacci, a sad piano melody..."
@@ -363,15 +422,15 @@ const App = () => {
                         aria-label="Describe your core concept"
                     ></textarea>
                 </div>
-                
+
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Step 2: Add Modifiers</label>
                     <div className="p-4 bg-slate-200/50 dark:bg-gray-900/40 rounded-xl">
                         {renderModeOptions()}
                     </div>
                 </div>
-                
-                <button 
+
+                <button
                     onClick={handleGenerateClick}
                     disabled={isLoading || !userPrompt.trim()}
                     className="w-full bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
@@ -381,7 +440,7 @@ const App = () => {
                     {buttonText}
                 </button>
             </section>
-            
+
             {/* Output section */}
             <section role="region" aria-labelledby="output-heading" className="glass rounded-2xl p-4 sm:p-6 fade-in" style={{ animationDelay: '0.6s' }}>
                 <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
@@ -389,8 +448,8 @@ const App = () => {
                         <i className="fas fa-sparkles mr-2 text-yellow-500 dark:text-yellow-400"></i>
                         Step 3: Your Enhanced Prompt
                     </h2>
-                     <div className="flex items-center space-x-2">
-                        <button 
+                    <div className="flex items-center space-x-2">
+                        <button
                             onClick={handleCopyToClipboard}
                             disabled={!primaryResult || isLoading}
                             className="text-xs bg-slate-200 dark:bg-gray-800 hover:bg-slate-300 dark:hover:bg-gray-700 px-2 sm:px-3 py-1.5 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
@@ -400,17 +459,17 @@ const App = () => {
                         </button>
                     </div>
                 </div>
-                
+
                 <div className="relative bg-slate-100 dark:bg-gray-800 rounded-lg min-h-[20rem] sm:min-h-[24rem] overflow-hidden">
                     {isLoading && (
                         <div className="absolute inset-0 flex justify-center items-center bg-slate-100/80 dark:bg-gray-800/80 z-10">
                             <div className="text-center text-slate-500 dark:text-gray-400">
-                                <i className="fas fa-brain fa-beat-fade text-4xl text-purple-500 dark:text-purple-400 mb-4" style={{'--fa-animation-duration': '2s'} as React.CSSProperties}></i>
+                                <i className="fas fa-brain fa-beat-fade text-4xl text-purple-500 dark:text-purple-400 mb-4" style={{ '--fa-animation-duration': '2s' } as React.CSSProperties}></i>
                                 <p>{loadingMessage || 'Working...'}</p>
                             </div>
                         </div>
                     )}
-                    
+
                     {!isLoading && !primaryResult && (
                         <div className="text-slate-500 dark:text-gray-400 italic h-full flex items-center justify-center p-4 text-center">
                             <p>Your expertly crafted prompt will appear here...</p>
@@ -429,7 +488,7 @@ const App = () => {
                                     Result
                                 </button>
                                 {jsonResult && (
-                                     <button
+                                    <button
                                         role="tab"
                                         aria-selected={activeOutputTab === 'json'}
                                         onClick={() => setActiveOutputTab('json')}
@@ -455,7 +514,7 @@ const App = () => {
                     )}
                 </div>
             </section>
-            
+
             <PromptLibrary onUseTemplate={handleUseTemplate} />
         </>
     );
