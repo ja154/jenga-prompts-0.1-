@@ -1,5 +1,3 @@
-
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getEnhancedPrompt } from '../services/geminiService.ts';
 
