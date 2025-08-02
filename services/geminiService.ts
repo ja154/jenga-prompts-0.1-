@@ -142,7 +142,7 @@ export async function getEnhancedPrompt({
     }
 
     const model = ai.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: options.model || 'gemini-1.5-flash',
         systemInstruction: systemInstruction,
     });
 
