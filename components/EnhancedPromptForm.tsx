@@ -82,7 +82,11 @@ export default function EnhancedPromptForm() {
 
     if (!res.ok) {
       const err = await res.json();
-      setErrorLog(`❌ ${err.error || 'Internal Server Error'}`);
+      let errorDisplay = `❌ ${err.error || 'Internal Server Error'}`;
+      if (err.debug) {
+        errorDisplay += `\n\n--- Debug Info ---\n${err.debug}`;
+      }
+      setErrorLog(errorDisplay);
       setLoading(false);
       return;
     }
@@ -120,7 +124,11 @@ export default function EnhancedPromptForm() {
             }
 
             if (parsed.error) {
-              setErrorLog(parsed.error);
+              let errorDisplay = `❌ ${parsed.error}`;
+              if (parsed.debug) {
+                errorDisplay += `\n\n--- Debug Info ---\n${parsed.debug}`;
+              }
+              setErrorLog(errorDisplay);
             }
           } catch (err) {
             setErrorLog(prev => prev + `\n[stream parse error] ${line}`);
