@@ -12,82 +12,149 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.9.0",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
-  }
-}
-</script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-    }
-  </script>
-</head>
-
-  <body class="min-h-screen">
-    <div class="pattern-background"></div>
-    
-    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-      <header class="mb-8 sm:mb-12 text-center fade-in" style="animation-delay: 0.2s;">
-        <div class="inline-block mb-4 loader-container">
-          <div class="loader">
-            <div class="box1"></div>
-            <div class="box2"></div>
-            <div class="box3"></div>
-          </div>
-        </div>
-        <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold mb-3">
-          <span class="title-stroked">JengaPrompts Pro</span>
-        </h1>
-        <p class="text-white dark:text-gray-400 max-w-3xl mx-auto text-base sm:text-lg" style="text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);">
-          The professional toolkit to build, test, and optimize prompts for any AI model.
-        </p>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f9fafb;
+        color: #1f2937;
+      }
+      .glass {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      }
+      .gradient-text {
+        background: linear-gradient(to right, #6366f1, #3b82f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .step-box {
+        background-color: #fff;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen py-10 px-4 lg:px-16 bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto">
+      <header class="text-center mb-10">
+        <h1 class="text-4xl sm:text-5xl font-bold mb-2">JengaPrompts Pro</h1>
+        <p class="text-gray-600 dark:text-gray-300">The professional toolkit to build, test, and optimize prompts for any AI model.</p>
       </header>
-      
-      <main id="root" class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8 sm:mb-12">
-        <!-- React App will be rendered here -->
-      </main>
-      
-      <section class="glass rounded-2xl p-6 sm:p-8 mb-8 sm:mb-12 fade-in" style="animation-delay: 0.8s;">
-        <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-center gradient-text">Your Universal Prompt Engineering Suite</h2>
+
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <div class="step-box">
+          <h2 class="text-xl font-semibold mb-2">Step 1: Define Your Prompt</h2>
+          <label class="block font-medium mb-1">Select Prompt Mode</label>
+          <select class="w-full border border-gray-300 rounded-md p-2 mb-3">
+            <option>Text</option>
+            <option>Image</option>
+            <option>Video</option>
+            <option>Audio</option>
+            <option>Code</option>
+          </select>
+          <label class="block font-medium mb-1">Your Core Idea or Concept</label>
+          <input type="text" placeholder="e.g., An astronaut riding a horse..." class="w-full border border-gray-300 rounded-md p-2">
+        </div>
+
+        <div class="step-box">
+          <h2 class="text-xl font-semibold mb-2">Step 2: Add Modifiers</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block font-medium mb-1">Output Format</label>
+              <select class="w-full border border-gray-300 rounded-md p-2">
+                <option>Descriptive Paragraph</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-1">Tone / Mood</label>
+              <select class="w-full border border-gray-300 rounded-md p-2">
+                <option>Neutral</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-1">Style</label>
+              <select class="w-full border border-gray-300 rounded-md p-2">
+                <option>Cinematic</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-1">Aspect Ratio</label>
+              <select class="w-full border border-gray-300 rounded-md p-2">
+                <option>Landscape (16:9)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-1">Lighting</label>
+              <select class="w-full border border-gray-300 rounded-md p-2">
+                <option>Golden Hour</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-1">Framing</label>
+              <select class="w-full border border-gray-300 rounded-md p-2">
+                <option>MediumShot</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-1">Camera Angle</label>
+              <select class="w-full border border-gray-300 rounded-md p-2">
+                <option>Frontal</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-1">Detail Level</label>
+              <select class="w-full border border-gray-300 rounded-md p-2">
+                <option>Hyper-detailed</option>
+              </select>
+            </div>
+          </div>
+          <label class="block font-medium mt-4 mb-1">Additional Details (Optional)</label>
+          <textarea class="w-full border border-gray-300 rounded-md p-2" rows="3" placeholder="E.g., turquoise rings, stark white background..."></textarea>
+          <button class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">Enhance Prompt</button>
+        </div>
+      </section>
+
+      <section class="step-box mb-10">
+        <h2 class="text-xl font-semibold mb-2">Step 3: Your Enhanced Prompt</h2>
+        <textarea class="w-full border border-gray-300 rounded-md p-2 mb-2" rows="4" readonly placeholder="Your expertly crafted prompt will appear here..."></textarea>
+        <button class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">Copy</button>
+      </section>
+
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 text-center gradient-text">Prompt Library</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-slate-100 dark:bg-gray-800/50 hover:bg-slate-200 dark:hover:bg-gray-800/70 p-6 rounded-xl transition-all transform hover:-translate-y-1">
-            <div class="w-12 h-12 bg-purple-500/10 dark:bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
-              <i class="fas fa-cubes text-purple-500 dark:text-purple-400 text-xl"></i>
-            </div>
-            <h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-white">For Any Modality</h3>
-            <p class="text-slate-600 dark:text-gray-400 text-sm">Craft expert prompts for Text, Image, Video, Audio, and Code generation, all in one place.</p>
+          <div class="glass p-4 rounded-xl">
+            <h3 class="font-semibold mb-2">Realistic Polaroid Photo</h3>
+            <p class="text-sm text-gray-600">Generates a realistic, awkwardly-framed polaroid with harsh flash and film texture.</p>
           </div>
-          <div class="bg-slate-100 dark:bg-gray-800/50 hover:bg-slate-200 dark:hover:bg-gray-800/70 p-6 rounded-xl transition-all transform hover:-translate-y-1">
-            <div class="w-12 h-12 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg flex items-center justify-center mb-4">
-              <i class="fas fa-cogs text-blue-500 dark:text-blue-400 text-xl"></i>
-            </div>
-            <h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-white">Platform-Agnostic</h3>
-            <p class="text-slate-600 dark:text-gray-400 text-sm">Engineer prompts that work across different AI models like GPT-4, Midjourney, Sora, and more.</p>
+          <div class="glass p-4 rounded-xl">
+            <h3 class="font-semibold mb-2">Classic Disney Character</h3>
+            <p class="text-sm text-gray-600">Transforms a character description into the classic, hand-drawn Disney animation style.</p>
           </div>
-          <div class="bg-slate-100 dark:bg-gray-800/50 hover:bg-slate-200 dark:hover:bg-gray-800/70 p-6 rounded-xl transition-all transform hover:-translate-y-1">
-            <div class="w-12 h-12 bg-green-500/10 dark:bg-green-500/20 rounded-lg flex items-center justify-center mb-4">
-              <i class="fas fa-brain text-green-500 dark:text-green-400 text-xl"></i>
-            </div>
-            <h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-white">Structured Enhancement</h3>
-            <p class="text-slate-600 dark:text-gray-400 text-sm">Our AI adds the keywords, structure, and technical details that get superior results.</p>
+          <div class="glass p-4 rounded-xl">
+            <h3 class="font-semibold mb-2">Your Home As A LEGO Set</h3>
+            <p class="text-sm text-gray-600">Renders a house as a photorealistic LEGO Creator Expert playset, complete with box art.</p>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <h3 class="font-semibold mb-2">Collectible Beanie Baby</h3>
+            <p class="text-sm text-gray-600">Creates a photo of a custom, 1990s-style collectible Beanie Baby plush toy with a tag.</p>
+          </div>
+          <div class="glass p-4 rounded-xl">
+            <h3 class="font-semibold mb-2">Awkward 90’s Yearbook Photo</h3>
+            <p class="text-sm text-gray-600">Generates a cheesy, awkward 1990s high school yearbook photo with a laser background.</p>
           </div>
         </div>
       </section>
-      
-      <footer class="text-center text-slate-500 dark:text-gray-500 text-sm fade-in" style="animation-delay: 1s;">
-        <div class="flex justify-center space-x-6 mb-4">
-          <a href="#" class="hover:text-slate-900 dark:hover:text-white transition-all"><i class="fab fa-twitter text-lg"></i></a>
-          <a href="#" class="hover:text-slate-900 dark:hover:text-white transition-all"><i class="fab fa-discord text-lg"></i></a>
-          <a href="#" class="hover:text-slate-900 dark:hover:text-white transition-all"><i class="fab fa-github text-lg"></i></a>
-          <a href="#" class="hover:text-slate-900 dark:hover:text-white transition-all"><i class="fas fa-envelope text-lg"></i></a>
-        </div>
-        <p>© 2024 JengaPrompts Pro. All rights reserved.</p>
+
+      <footer class="text-center text-gray-500 text-sm">
+        <p class="mb-2">© 2024 JengaPrompts Pro. All rights reserved.</p>
       </footer>
     </div>
   </body>
