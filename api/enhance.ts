@@ -14,7 +14,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { userPrompt, mode, options } = await req.json();
+    const body: any = await new Promise((resolve, reject) => {
+      let data = '';
+      req.on('data', chunk => (data += chunk));
+      req.on('end', () => resolve(JSON.parse(data)));
+      req.on('error', reject);
+    });
+
+    const { userPrompt, mode, options } = body;
 
     // Detailed logging for incoming requests
     console.log('Received /api/enhance request:', {
