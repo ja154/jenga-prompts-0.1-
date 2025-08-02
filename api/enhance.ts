@@ -16,6 +16,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { userPrompt, mode, options } = await req.json();
 
+    // Detailed logging for incoming requests
+    console.log('Received /api/enhance request:', {
+      userPrompt,
+      mode,
+      options,
+      ip: req.headers['x-forwarded-for'],
+      userAgent: req.headers['user-agent'],
+    });
+
     if (!userPrompt || !mode || !options) {
       res.status(400).json({ error: 'Missing required parameters: userPrompt, mode, options' });
       return;
@@ -48,10 +57,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error: any) {
     console.error('Error in /api/enhance:', error);
-    const message = error.message || 'An unknown error occurred.';
-    // We can't set status code here because headers might already be sent.
-    // We can, however, send a final error message in the stream.
-    res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
-    res.end();
+    const message = error.message || 'An unknown server error occurred.';
+
+    // If headers are already sent, we must send the error through the stream
+    if (res.headersSent) {
+      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+      res.end();
+    } else {
+      // If headers are not sent, we can send a proper HTTP error response
+      res.status(500).json({ error: message });
+    }
   }
 }

@@ -120,6 +120,12 @@ export async function getEnhancedPrompt({
     mode: string;
     options: Record<string, any>;
 }): Promise<ReadableStream<Uint8Array>> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    console.log(`GEMINI_API_KEY loaded: ${apiKey ? 'Yes' : 'No'}`);
+    if (!apiKey) {
+        throw new Error('The GEMINI_API_KEY environment variable is not set.');
+    }
+
     const systemInstruction = buildSystemInstruction(mode, options);
     const isSimpleJson = options.outputStructure === OutputStructure.SimpleJSON;
     const isDetailedJson = options.outputStructure === OutputStructure.DetailedJSON;
