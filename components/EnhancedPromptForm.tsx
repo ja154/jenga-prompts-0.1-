@@ -74,7 +74,7 @@ export default function EnhancedPromptForm() {
       },
     };
 
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL || ''}/api/enhance`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL || ''}/api/test-stream`;
 
     const res = await fetch(apiUrl, {
       method: 'POST',
