@@ -52,21 +52,29 @@ export default async function handler(req, res) {
             topK: 40,
         };
 
-        const response = await ai.models.generateContent({
+        const result = await ai.models.generateContent({
             model: 'gemini-1.5-flash',
             contents: [{role: "user", parts: [{text: finalUserPrompt}]}],
             ...config
         });
 
-        const rawText = response.response.candidates[0].content.parts[0].text;
+        const response = result.response;
+
+        if (!response || !response.candidates || response.candidates.length === 0) {
+            console.error('Invalid response from Gemini API:', JSON.stringify(result, null, 2));
+            // Check for specific block reasons
+            if (response && response.promptFeedback && response.promptFeedback.blockReason) {
+                throw new Error(`Request was blocked by the API. Reason: ${response.promptFeedback.blockReason}`);
+            }
+            throw new Error('Invalid or empty response from Gemini API');
+        }
+
+        const rawText = response.candidates[0].content.parts[0].text;
         if (!rawText) {
             throw new Error('Empty response from Gemini API');
         }
 
         const enhancedPrompt = rawText.trim();
-
-        let primaryResult = enhancedPrompt;
-        let jsonResult;
 
         if (options.outputStructure === 'JSON') {
             const jsonOutput = {
@@ -76,16 +84,15 @@ export default async function handler(req, res) {
                     ...options
                 }
             };
-            if ('additionalDetails' in jsonOutput.parameters && jsonOutput.parameters.additionalDetails === '') {
+            if ('additionalDetails'in jsonOutput.parameters && jsonOutput.parameters.additionalDetails === '') {
                 delete jsonOutput.parameters.additionalDetails;
             }
-            jsonResult = JSON.stringify(jsonOutput, null, 2);
+            res.status(200).json(jsonOutput);
+        } else {
+            res.status(200).json({
+                prompt: enhancedPrompt,
+            });
         }
-
-        res.status(200).json({
-            primaryResult,
-            jsonResult,
-        });
 
     } catch (error) {
         console.error('Error in non-streaming enhancement:', error);
