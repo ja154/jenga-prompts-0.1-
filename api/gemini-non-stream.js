@@ -81,7 +81,21 @@ export default async function handler(req, res) {
                 if (typeof primaryResult !== 'string' || !primaryResult.trim()) {
                      throw new Error("The model's JSON response is missing the required prompt content.");
                 }
-                jsonResult = JSON.stringify(parsedJson, null, 2);
+
+                // Create the parameters object, combining mode and the original options
+                const parameters = {
+                    mode: mode,
+                    ...options
+                };
+
+                // Construct the final JSON object in the desired structure
+                const finalJson = {
+                    prompt: primaryResult,
+                    parameters: parameters
+                };
+
+                // Stringify the new structured JSON for the response
+                jsonResult = JSON.stringify(finalJson, null, 2);
             } catch (e) {
                 const error = new Error(`The model returned invalid JSON. See raw output for details. Parser error: ${e instanceof Error ? e.message : 'unknown'}`);
                 error.cause = { rawText: rawText };
