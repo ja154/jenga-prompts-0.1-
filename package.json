@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "A professional toolkit to build, test, and optimize prompts for any AI model (Text, Image, Video, Audio, Code).",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
