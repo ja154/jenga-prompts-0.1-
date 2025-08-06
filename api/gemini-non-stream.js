@@ -24,6 +24,7 @@ export default async function handler(req, res) {
     }
 
     try {
+        console.log('Received request for non-streaming enhancement.');
         const { userPrompt, mode, options } = req.body;
 
         if (!userPrompt) {
@@ -95,7 +96,7 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Gemini API Error:', error);
+        console.error('Error in non-streaming enhancement:', error);
 
         const responseError = {
             error: 'Failed to generate content',
