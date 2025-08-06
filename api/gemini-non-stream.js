@@ -64,7 +64,7 @@ export default async function handler(req, res) {
             config: config
         });
 
-        const rawText = response.text;
+        const rawText = response.response.candidates[0].content.parts[0].text;
         if (!rawText) {
             throw new Error('Empty response from Gemini API');
         }
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
                 jsonResult = JSON.stringify(parsedJson, null, 2);
             } catch (e) {
                 const error = new Error(`The model returned invalid JSON. See raw output for details. Parser error: ${e instanceof Error ? e.message : 'unknown'}`);
-                error.cause = { rawText };
+                error.cause = { rawText: rawText };
                 throw error;
             }
         } else {
