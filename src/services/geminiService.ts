@@ -15,6 +15,7 @@ export async function getEnhancedPrompt({
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': import.meta.env.VITE_CLIENT_API_KEY,
             },
             body: JSON.stringify({
                 userPrompt,
@@ -75,6 +76,7 @@ export async function getEnhancedPromptStream({
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': import.meta.env.VITE_CLIENT_API_KEY,
             },
             body: JSON.stringify({
                 userPrompt,
