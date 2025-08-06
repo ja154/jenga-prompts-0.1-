@@ -1,9 +1,9 @@
 {
   "version": 2,
+  "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "framework": "vite",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -30,12 +30,8 @@
     }
   ],
   "functions": {
-    "app/api/**": {
+    "api/**.js": {
       "runtime": "nodejs18.x"
     }
-  },
-  "env": {
-    "VITE_API_URL": "@vite_api_url",
-    "NODE_ENV": "production"
   }
 }
