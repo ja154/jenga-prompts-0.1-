@@ -1,8 +1,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { OutputStructure, PromptMode } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Environment variable access for Vercel deployment
+const getApiKey = () => {
+  // For development
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env.API_KEY || process.env.VITE_GEMINI_API_KEY;
+  }
+  // For production build (Vite injects VITE_ prefixed env vars)
+  return (window as any).__GEMINI_API_KEY__ || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+};
 
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
+
+// This defines all possible modifier keys that can be included in the detailed JSON output.
+// The model will only include the ones relevant to the user's request.
 const allModifierProperties = {
     contentTone: { type: Type.STRING, description: "The tone/mood of the content." },
     pov: { type: Type.STRING, description: "Point of view for video." },
@@ -50,9 +62,11 @@ const schemas = {
 
 function buildSystemInstruction(mode: string, options: Record<string, any>): string {
     let instruction = `You are a world-class prompt engineer. Your mission is to expand a user's simple idea into a rich, detailed, and highly effective prompt for a generative AI model. The generated prompt should be a masterpiece of clarity and descriptive power.`;
-
+    
+    // When a JSON schema is used, the model is already instructed on the output format.
+    // Adding conversational text can interfere. So, we only add it for paragraph output.
     if (options.outputStructure === OutputStructure.Paragraph) {
-        instruction += ` Do not add any conversational text, prefixes, or explanations. Only output the final prompt.`;
+       instruction += ` Do not add any conversational text, prefixes, or explanations. Only output the final prompt.`;
     }
 
     let modeInstruction = '';
@@ -111,6 +125,7 @@ function buildSystemInstruction(mode: string, options: Record<string, any>): str
     return instruction;
 }
 
+// Non-streaming version (fallback)
 export async function getEnhancedPrompt({
     userPrompt,
     mode,
@@ -119,65 +134,156 @@ export async function getEnhancedPrompt({
     userPrompt: string;
     mode: string;
     options: Record<string, any>;
-}): Promise<ReadableStream<Uint8Array>> {
-    const apiKey = process.env.GEMINI_API_KEY;
-    console.log(`GEMINI_API_KEY loaded: ${apiKey ? 'Yes' : 'No'}`);
-    if (!apiKey) {
-        throw new Error('The GEMINI_API_KEY environment variable is not set.');
-    }
-
+}) {
     const systemInstruction = buildSystemInstruction(mode, options);
     const isSimpleJson = options.outputStructure === OutputStructure.SimpleJSON;
     const isDetailedJson = options.outputStructure === OutputStructure.DetailedJSON;
 
-    const generationConfig: any = {
+    const config: any = {
+        systemInstruction,
         temperature: 0.7,
         topP: 0.95,
         topK: 40,
     };
 
     if (isSimpleJson || isDetailedJson) {
-        generationConfig.responseMimeType = "application/json";
-        generationConfig.responseSchema = isSimpleJson ? schemas.simple : schemas.detailed;
+        config.responseMimeType = "application/json";
+        config.responseSchema = isSimpleJson ? schemas.simple : schemas.detailed;
     }
-
-    const model = ai.getGenerativeModel({
-        model: options.model || 'gemini-1.5-flash',
-        systemInstruction: systemInstruction,
-    });
-
+    
     try {
-        const result = await model.generateContentStream({
-            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-            generationConfig: generationConfig,
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: userPrompt,
+            config: config
         });
 
-        const encoder = new TextEncoder();
-        const stream = new ReadableStream({
-            async start(controller) {
-                for await (const chunk of result.stream) {
-                    const text = chunk.text();
-                    if (text) {
-                        controller.enqueue(encoder.encode(text));
-                    }
+        const rawText = response.text;
+        if (!rawText) {
+            throw new Error('Empty response from Gemini API');
+        }
+        
+        let primaryResult: string;
+        let jsonResult: string | undefined;
+
+        if (isSimpleJson || isDetailedJson) {
+            try {
+                const parsedJson = JSON.parse(rawText);
+                primaryResult = isDetailedJson ? parsedJson.fullPrompt : parsedJson.prompt;
+                if (typeof primaryResult !== 'string' || !primaryResult.trim()) {
+                     throw new Error("The model's JSON response is missing the required prompt content.");
                 }
-                controller.close();
-            },
-        });
-
-        return stream;
+                jsonResult = JSON.stringify(parsedJson, null, 2);
+            } catch (e) {
+                 // The API should guarantee JSON, but as a fallback, we throw a clear error
+                // and pass the raw response text in the error's cause for the UI to handle.
+                const error = new Error(`The model returned invalid JSON. See raw output for details. Parser error: ${e instanceof Error ? e.message : 'unknown'}`);
+                (error as any).cause = { rawText }; // Attach raw text for debugging in the UI.
+                throw error;
+            }
+        } else {
+            primaryResult = rawText;
+            jsonResult = undefined;
+        }
+        
+        return {
+            primaryResult,
+            jsonResult,
+        };
 
     } catch (error) {
-        console.error("Gemini API call failed:", error);
         if (error instanceof Error) {
-            if (error.message.includes('API key not valid')) {
-                throw new Error('The API key is invalid. Please check your configuration.');
+            // If we attached a cause from the JSON parsing block, propagate it.
+            if ((error as any).cause) {
+                throw error;
             }
             if (isSimpleJson || isDetailedJson) {
+                // A more generic error if JSON was expected but something went wrong.
                 throw new Error(`The model failed to return the expected structured data. Please try adjusting your prompt or modifiers. Details: ${error.message}`);
             }
             throw new Error(`Gemini API error: ${error.message}`);
         }
         throw new Error("An unknown error occurred with the Gemini API.");
+    }
+}
+
+// Streaming version for better UX
+export async function getEnhancedPromptStream({
+    userPrompt,
+    mode,
+    options,
+    onChunk,
+    onComplete,
+    onError
+}: {
+    userPrompt: string;
+    mode: string;
+    options: Record<string, any>;
+    onChunk?: (text: string) => void;
+    onComplete?: (fullText: string) => void;
+    onError?: (error: Error) => void;
+}) {
+    try {
+        const apiUrl = '/api/gemini-stream';
+        
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userPrompt,
+                mode,
+                options
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        if (!response.body) {
+            throw new Error('No response body for streaming');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                fullText += chunk;
+                
+                if (onChunk) {
+                    onChunk(chunk);
+                }
+            }
+
+            if (onComplete) {
+                onComplete(fullText);
+            }
+
+            return {
+                primaryResult: fullText,
+                jsonResult: undefined
+            };
+
+        } finally {
+            reader.releaseLock();
+        }
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown streaming error';
+        
+        if (onError) {
+            onError(new Error(errorMessage));
+        }
+        
+        throw new Error(`Streaming error: ${errorMessage}`);
     }
 }
