@@ -1,4 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import fs from 'fs';
+import path from 'path';
 
 // Vercel API route for non-streaming Gemini responses
 export default async function handler(req, res) {
@@ -41,7 +43,7 @@ export default async function handler(req, res) {
         const ai = new GoogleGenAI({ apiKey });
 
         // Build system instruction based on mode and options
-        const systemInstruction = buildSystemInstruction(mode, options);
+        const systemInstruction = buildSystemInstruction(mode, options, userPrompt);
 
         const isSimpleJson = options.outputStructure === 'SimpleJSON';
         const isDetailedJson = options.outputStructure === 'DetailedJSON';
@@ -155,69 +157,35 @@ const schemas = {
     }
 };
 
-function buildSystemInstruction(mode, options) {
-    let instruction = `You are a world-class prompt engineer. Your mission is to expand a user's simple idea into a rich, detailed, and highly effective prompt for a generative AI model. The generated prompt should be a masterpiece of clarity and descriptive power.`;
+function buildSystemInstruction(mode, options, userPrompt) {
+    const frameworkPath = path.resolve(process.cwd(), 'api', 'prompt-framework.json');
+    const framework = JSON.parse(fs.readFileSync(frameworkPath, 'utf-8'));
 
-    if (options.outputStructure === 'Paragraph') {
-       instruction += ` Do not add any conversational text, prefixes, or explanations. Only output the final prompt.`;
+    const persona = framework.steps.find(step => step.name === "Persona Assignment").template;
+    const modalityConfig = framework.steps.find(step => step.name === "Modality-Specific Task Definition").modalities[mode];
+
+    if (!modalityConfig) {
+        return "You are a helpful assistant."; // Fallback
     }
 
-    let modeInstruction = '';
-    let paramsToIncorporate = '';
-
-    const addParam = (label, value) => {
-        if (value) {
-            paramsToIncorporate += `- ${label}: ${value}\n`;
+    let modalityInstruction = modalityConfig.goal;
+    if (modalityConfig.directives_template) {
+        let directives = JSON.stringify(modalityConfig.directives_template);
+        for (const key in options) {
+            directives = directives.replace(new RegExp(`{{${key}}}`, 'g'), options[key]);
         }
-    };
-
-    switch (mode) {
-        case 'Image':
-            if (options.outputStructure !== 'SimpleJSON' && options.outputStructure !== 'DetailedJSON') {
-                modeInstruction = `The target model is a state-of-the-art AI image generator. Weave the following parameters into a fluid, descriptive paragraph. Do not just list them. The prompt should paint a vivid picture for the AI.`;
-                addParam('Style', options.imageStyle);
-                addParam('Mood/Tone', options.contentTone);
-                addParam('Lighting', options.lighting);
-                addParam('Framing', options.framing);
-                addParam('Camera Angle', options.cameraAngle);
-                addParam('Detail Level', options.resolution);
-                addParam('Aspect Ratio', options.aspectRatio);
-                addParam('Additional Specifics', options.additionalDetails);
-            } else {
-                modeInstruction = `The target model is a state-of-the-art AI image generator. Your task is to populate the JSON object with the provided parameters.`;
-            }
-            break;
-        case 'Video':
-            modeInstruction = `The target model is a state-of-the-art AI video generator. Describe a continuous scene, focusing on motion, atmosphere, and visual storytelling.`;
-            addParam('Tone', options.contentTone);
-            addParam('Point of View', options.pov);
-            addParam('Detail Level', options.resolution);
-            break;
-        case 'Text':
-            modeInstruction = `The target is a large language model. Your goal is to refine the user's request into a crystal-clear and effective prompt for generating text.`;
-            addParam('Tone of Voice', options.contentTone);
-            addParam('Desired Output Format', options.outputFormat);
-            break;
-        case 'Audio':
-            modeInstruction = `The target model is an AI audio/music generator. Describe the sound in detail, including instrumentation, tempo, and emotional feeling.`;
-            addParam('Audio Type', options.audioType);
-            addParam('Vibe/Mood', options.audioVibe);
-            addParam('Overall Tone', options.contentTone);
-            break;
-        case 'Code':
-            modeInstruction = `The target model is a code generation AI. Create a precise and unambiguous prompt to accomplish the user's technical task. The prompt must provide sufficient context for the AI to generate, debug, or explain code correctly.`;
-            addParam('Language', options.codeLanguage);
-            addParam('Task', options.codeTask);
-            break;
-        default:
-            modeInstruction = `Generate a general-purpose, high-quality prompt.`;
-            break;
+        modalityInstruction += `\n\nDirectives:\n${directives}`;
     }
 
-    instruction += `\n\n### Task\n${modeInstruction}`;
-    if (paramsToIncorporate) {
-        instruction += `\n\n### Parameters to Incorporate\n${paramsToIncorporate}`;
+    if (modalityConfig.key_requirements) {
+        modalityInstruction += `\n\nKey Requirements:\n- ${modalityConfig.key_requirements.join('\n- ')}`;
     }
 
-    return instruction;
+    if (modalityConfig.output_format_instruction) {
+        modalityInstruction += `\n\nOutput Format:\n${modalityConfig.output_format_instruction}`;
+    }
+
+    const userInputInjection = framework.steps.find(step => step.name === "User Input Injection").template.replace('{{userPrompt}}', userPrompt);
+
+    return `${persona}\n\n${modalityInstruction}\n\n${userInputInjection}`;
 }

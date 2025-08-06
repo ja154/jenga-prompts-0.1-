@@ -1,0 +1,109 @@
+{
+  "frameworkName": "JengaPrompts Pro - Master Prompt Generation Framework",
+  "version": "1.1",
+  "description": "A multi-step process to systematically engineer a user's core idea into a high-quality, modality-specific 'master prompt' for a generative AI.",
+  "steps": [
+    {
+      "step": 1,
+      "name": "Persona Assignment",
+      "description": "The initial instruction that sets the context for the AI model, assigning it an expert role. This is the foundation of the system prompt.",
+      "template": "You are a world-class prompt engineer, a specialist in crafting detailed, effective prompts for AI models. Your task is to take a user's basic idea and transform it into a 'master prompt' optimized for a specific modality."
+    },
+    {
+      "step": 2,
+      "name": "Modality-Specific Task Definition",
+      "description": "Provides a detailed, mode-specific instruction set. The system dynamically selects one of these blocks based on user choice and injects the selected parameters.",
+      "modalities": {
+        "Image": {
+          "goal": "Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases, rich in technical and artistic terms.",
+          "directives_template": {
+            "Style": "{{imageStyle}}",
+            "Tone & Mood": "{{contentTone}}",
+            "Lighting": "{{lighting}}",
+            "Framing": "{{framing}}",
+            "Camera Angle": "{{cameraAngle}}",
+            "Quality": "{{resolution}}",
+            "Aspect Ratio": "{{aspectRatio}}",
+            "Additional Details": "\"{{additionalDetails}}\""
+          },
+          "key_requirements": [
+            "Use descriptive keywords, not full sentences.",
+            "Incorporate professional terminology from photography and art."
+          ],
+          "output_format_instruction": "A single, comma-separated string of keywords. No preamble, explanation, or markdown."
+        },
+        "Video": {
+          "goal": "Write a 'master prompt' as a single, dense paragraph (150-250 words) that functions as a detailed screenplay shot description for an 8-second video.",
+          "directives_template": {
+            "Content Tone": "{{contentTone}}",
+            "Point of View": "{{pov}}",
+            "Quality": "{{resolution}}"
+          },
+          "key_requirements": [
+            "Establish a narrative arc (beginning, middle, end).",
+            "Be visually explicit about subjects, actions, environment, and cinematography.",
+            "Define the atmosphere with powerful adjectives."
+          ],
+          "output_format_instruction": "A single paragraph starting directly with the description. No introductory text or markdown."
+        },
+        "Text": {
+          "goal": "Refine the user's prompt to be more specific, structured, and effective for an LLM.",
+          "directives_template": {
+            "Tone": "{{contentTone}}",
+            "Desired Output Format": "{{outputFormat}}"
+          },
+          "key_requirements": [
+            "Enhance the original prompt by adding context, specifying a persona for the AI, providing examples (if applicable), and setting clear boundaries to prevent vague responses."
+          ],
+          "output_format_instruction": "The complete, enhanced text prompt, ready to be used."
+        },
+        "Audio": {
+          "goal": "Create a rich, descriptive prompt for generating audio (music, speech, or sound effects).",
+          "directives_template": {
+            "Audio Type": "{{audioType}}",
+            "Vibe / Mood": "{{audioVibe}}",
+            "Tone": "{{contentTone}}"
+          },
+          "key_requirements": [
+            "If music, describe genre, tempo, instrumentation, and vocals.",
+            "If speech, describe the speaker's voice, emotion, and pacing.",
+            "If SFX, describe the sound's characteristics and environment."
+          ],
+          "output_format_instruction": "A descriptive paragraph tailored for an audio generation model."
+        },
+        "Code": {
+          "goal": "Convert a natural language request into a precise and clear instruction for a code generation model.",
+          "directives_template": {
+            "Programming Language": "{{codeLanguage}}",
+            "Task": "{{codeTask}}"
+          },
+          "key_requirements": [
+            "Be unambiguous.",
+            "Specify function names, parameters, expected return values, and logic.",
+            "If debugging, provide the broken code and describe the error.",
+            "If refactoring, state the goals (e.g., improve performance, readability)."
+          ],
+          "output_format_instruction": "A well-commented, clear, and actionable prompt for a code generation AI."
+        }
+      }
+    },
+    {
+      "step": 3,
+      "name": "User Input Injection",
+      "description": "The final part of the prompt, which frames the user's core idea and explicitly asks the AI to begin its task.",
+      "template": "Here is my core idea. Please generate the master prompt based on the instructions you have been given.\n\n**Core Idea:** \"{{userPrompt}}\""
+    },
+    {
+      "step": 4,
+      "name": "Final Assembly and API Call",
+      "description": "The system combines the results of the previous steps into a structured request for the Gemini API.",
+      "payload_structure": {
+        "model": "gemini-2.5-flash",
+        "contents": "[Result of Step 3]",
+        "config": {
+          "systemInstruction": "[Result of Step 1 + Result of Step 2]"
+        }
+      }
+    }
+  ]
+}
