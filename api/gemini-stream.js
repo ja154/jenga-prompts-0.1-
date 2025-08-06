@@ -24,6 +24,7 @@ export default async function handler(req, res) {
     }
 
     try {
+        console.log('Received request for streaming enhancement.');
         const { userPrompt, mode, options } = req.body;
         
         if (!userPrompt) {
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
         res.end();
 
     } catch (error) {
-        console.error('Gemini API Error:', error);
+        console.error('Error in streaming enhancement:', error);
         
         if (!res.headersSent) {
             res.status(500).json({ 

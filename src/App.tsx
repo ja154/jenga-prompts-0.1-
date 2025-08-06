@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, Suspense, CSSProperties } from 'react';
 import { getEnhancedPrompt } from './services/geminiService';
 import { TONE_OPTIONS, POV_OPTIONS, ASPECT_RATIO_OPTIONS, IMAGE_STYLE_OPTIONS, LIGHTING_OPTIONS, FRAMING_OPTIONS, CAMERA_ANGLE_OPTIONS, CAMERA_RESOLUTION_OPTIONS, TEXT_FORMAT_OPTIONS, AUDIO_TYPE_OPTIONS, AUDIO_VIBE_OPTIONS, CODE_LANGUAGE_OPTIONS, CODE_TASK_OPTIONS, OUTPUT_STRUCTURE_OPTIONS } from './constants';
 import { ContentTone, PointOfView, PromptMode, AspectRatio, ImageStyle, Lighting, Framing, CameraAngle, CameraResolution, AudioType, AudioVibe, CodeLanguage, CodeTask, OutputStructure, PromptHistoryItem, PromptHistoryItemOptions } from './types';
@@ -244,7 +244,7 @@ const App = () => {
 
             setPromptHistory(prev => [historyItem, ...prev]);
 
-        } catch (err) {
+        } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'An unknown error occurred.';
             setError(message);
             
@@ -269,7 +269,7 @@ const App = () => {
         const contentToCopy = activeOutputTab === 'json' ? jsonResult : primaryResult;
         if (!contentToCopy || copyStatus !== 'idle') return;
 
-        navigator.clipboard.writeText(contentToCopy).then(() => {
+        navigator.clipboard.writeText(contentToCopy ?? '').then(() => {
             setCopyStatus('copied');
             setTimeout(() => setCopyStatus('idle'), 2000);
         }).catch(() => {
@@ -495,7 +495,7 @@ const App = () => {
                     {isLoading && (
                         <div className="absolute inset-0 flex justify-center items-center bg-slate-100/80 dark:bg-gray-800/80 z-10">
                             <div className="text-center text-slate-500 dark:text-gray-400">
-                                <i className="fas fa-brain fa-beat-fade text-4xl text-purple-500 dark:text-purple-400 mb-4" style={{'--fa-animation-duration': '2s'} as React.CSSProperties}></i>
+                                <i className="fas fa-brain fa-beat-fade text-4xl text-purple-500 dark:text-purple-400 mb-4" style={{'--fa-animation-duration': '2s'} as CSSProperties}></i>
                                 <p>{loadingMessage || 'Working...'}</p>
                             </div>
                         </div>
