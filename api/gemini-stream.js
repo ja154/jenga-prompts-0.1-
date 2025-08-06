@@ -31,7 +31,7 @@ export default async function handler(req, res) {
             return;
         }
 
-        const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
             res.status(500).json({ error: 'API key not configured' });
             return;
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
                 error: 'Failed to generate content',
                 details: error.message 
             });
-        } else {
+        } else if (!res.writableEnded) {
             res.write(`\n\nError: ${error.message}`);
             res.end();
         }
