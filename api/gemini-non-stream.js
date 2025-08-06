@@ -173,7 +173,11 @@ function buildSystemInstruction(mode, options) {
 
     switch (mode) {
         case 'Image':
-            modeInstruction = `The target model is a state-of-the-art AI image generator. Weave the following parameters into a fluid, descriptive paragraph. Do not just list them. The prompt should paint a vivid picture for the AI.`;
+            if (options.outputStructure !== 'SimpleJSON' && options.outputStructure !== 'DetailedJSON') {
+                modeInstruction = `The target model is a state-of-the-art AI image generator. Weave the following parameters into a fluid, descriptive paragraph. Do not just list them. The prompt should paint a vivid picture for the AI.`;
+            } else {
+                modeInstruction = `The target model is a state-of-the-art AI image generator. Your task is to populate the JSON object with the provided parameters.`;
+            }
             addParam('Style', options.imageStyle);
             addParam('Mood/Tone', options.contentTone);
             addParam('Lighting', options.lighting);
