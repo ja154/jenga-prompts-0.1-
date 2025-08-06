@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 // Vercel API route for non-streaming Gemini responses
 export default async function handler(req, res) {
     // Enable CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', 'https://jenga-prompts-0-1.vercel.app');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -14,6 +14,12 @@ export default async function handler(req, res) {
 
     if (req.method !== 'POST') {
         res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
+    const clientApiKey = req.headers.authorization;
+    if (clientApiKey !== process.env.CLIENT_API_KEY) {
+        res.status(401).json({ error: 'Unauthorized' });
         return;
     }
 
