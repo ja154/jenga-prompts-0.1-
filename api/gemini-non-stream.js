@@ -175,17 +175,17 @@ function buildSystemInstruction(mode, options) {
         case 'Image':
             if (options.outputStructure !== 'SimpleJSON' && options.outputStructure !== 'DetailedJSON') {
                 modeInstruction = `The target model is a state-of-the-art AI image generator. Weave the following parameters into a fluid, descriptive paragraph. Do not just list them. The prompt should paint a vivid picture for the AI.`;
+                addParam('Style', options.imageStyle);
+                addParam('Mood/Tone', options.contentTone);
+                addParam('Lighting', options.lighting);
+                addParam('Framing', options.framing);
+                addParam('Camera Angle', options.cameraAngle);
+                addParam('Detail Level', options.resolution);
+                addParam('Aspect Ratio', options.aspectRatio);
+                addParam('Additional Specifics', options.additionalDetails);
             } else {
                 modeInstruction = `The target model is a state-of-the-art AI image generator. Your task is to populate the JSON object with the provided parameters.`;
             }
-            addParam('Style', options.imageStyle);
-            addParam('Mood/Tone', options.contentTone);
-            addParam('Lighting', options.lighting);
-            addParam('Framing', options.framing);
-            addParam('Camera Angle', options.cameraAngle);
-            addParam('Detail Level', options.resolution);
-            addParam('Aspect Ratio', options.aspectRatio);
-            addParam('Additional Specifics', options.additionalDetails);
             break;
         case 'Video':
             modeInstruction = `The target model is a state-of-the-art AI video generator. Describe a continuous scene, focusing on motion, atmosphere, and visual storytelling.`;
