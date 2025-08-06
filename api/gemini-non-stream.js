@@ -1,6 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import fs from 'fs';
-import path from 'path';
+import { GoogleGenAI } from "@google/genai";
 
 // Vercel API route for non-streaming Gemini responses
 export default async function handler(req, res) {
@@ -42,28 +40,22 @@ export default async function handler(req, res) {
 
         const ai = new GoogleGenAI({ apiKey });
 
-        // Build system instruction based on mode and options
-        const systemInstruction = buildSystemInstruction(mode, options, userPrompt);
+        // Build system instruction based on mode and options using the new logic
+        const systemInstruction = buildSystemPrompt(mode, options);
 
-        const isSimpleJson = options.outputStructure === 'SimpleJSON';
-        const isDetailedJson = options.outputStructure === 'DetailedJSON';
+        const finalUserPrompt = `Here is my core idea. Please generate the master prompt based on the instructions you have been given.\n\n**Core Idea:** "${userPrompt}"`;
 
         const config = {
-            systemInstruction,
+            systemInstruction: {role: "system", parts: [{text: systemInstruction}]},
             temperature: 0.7,
             topP: 0.95,
             topK: 40,
         };
 
-        if (isSimpleJson || isDetailedJson) {
-            config.responseMimeType = "application/json";
-            config.responseSchema = isSimpleJson ? schemas.simple : schemas.detailed;
-        }
-
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: userPrompt,
-            config: config
+            model: 'gemini-1.5-flash',
+            contents: [{role: "user", parts: [{text: finalUserPrompt}]}],
+            ...config
         });
 
         const rawText = response.response.candidates[0].content.parts[0].text;
@@ -71,39 +63,23 @@ export default async function handler(req, res) {
             throw new Error('Empty response from Gemini API');
         }
 
-        let primaryResult;
+        const enhancedPrompt = rawText.trim();
+
+        let primaryResult = enhancedPrompt;
         let jsonResult;
 
-        if (isSimpleJson || isDetailedJson) {
-            try {
-                const parsedJson = JSON.parse(rawText);
-                primaryResult = isDetailedJson ? parsedJson.fullPrompt : parsedJson.prompt;
-                if (typeof primaryResult !== 'string' || !primaryResult.trim()) {
-                     throw new Error("The model's JSON response is missing the required prompt content.");
-                }
-
-                // Create the parameters object, combining mode and the original options
-                const parameters = {
+        if (options.outputStructure === 'JSON') {
+            const jsonOutput = {
+                prompt: enhancedPrompt,
+                parameters: {
                     mode: mode,
                     ...options
-                };
-
-                // Construct the final JSON object in the desired structure
-                const finalJson = {
-                    prompt: primaryResult,
-                    parameters: parameters
-                };
-
-                // Stringify the new structured JSON for the response
-                jsonResult = JSON.stringify(finalJson, null, 2);
-            } catch (e) {
-                const error = new Error(`The model returned invalid JSON. See raw output for details. Parser error: ${e instanceof Error ? e.message : 'unknown'}`);
-                error.cause = { rawText: rawText };
-                throw error;
+                }
+            };
+            if ('additionalDetails' in jsonOutput.parameters && jsonOutput.parameters.additionalDetails === '') {
+                delete jsonOutput.parameters.additionalDetails;
             }
-        } else {
-            primaryResult = rawText;
-            jsonResult = undefined;
+            jsonResult = JSON.stringify(jsonOutput, null, 2);
         }
 
         res.status(200).json({
@@ -126,84 +102,70 @@ export default async function handler(req, res) {
     }
 }
 
-const allModifierProperties = {
-    contentTone: { type: Type.STRING, description: "The tone/mood of the content." },
-    pov: { type: Type.STRING, description: "Point of view for video." },
-    resolution: { type: Type.STRING, description: "Resolution or detail level." },
-    imageStyle: { type: Type.STRING, description: "Artistic style for the image." },
-    lighting: { type: Type.STRING, description: "Lighting style for the image." },
-    framing: { type: Type.STRING, description: "Framing of the image shot." },
-    cameraAngle: { type: Type.STRING, description: "Camera angle for the image." },
-    aspectRatio: { type: Type.STRING, description: "Aspect ratio for the image." },
-    additionalDetails: { type: Type.STRING, description: "Any other specific details." },
-    outputFormat: { type: Type.STRING, description: "Format for text output." },
-    audioType: { type: Type.STRING, description: "Type of audio to generate." },
-    audioVibe: { type: Type.STRING, description: "Vibe/mood for the audio." },
-    codeLanguage: { type: Type.STRING, description: "Programming language for the code task." },
-    codeTask: { type: Type.STRING, description: "The task to perform on the code." },
-};
+// New function to build the system prompt based on user's logic
+const buildSystemPrompt = (mode, options) => {
+    let basePrompt = `You are a world-class prompt engineer, a specialist in crafting detailed, effective prompts for AI models. Your task is to take a user's basic idea and transform it into a "master prompt" optimized for a specific modality.`;
 
-const schemas = {
-    simple: {
-        type: Type.OBJECT,
-        properties: {
-            prompt: { type: Type.STRING, description: "The expertly crafted prompt." }
-        },
-        required: ['prompt']
-    },
-    detailed: {
-        type: Type.OBJECT,
-        properties: {
-            basePrompt: {
-                type: Type.STRING,
-                description: "The original user's core idea."
-            },
-            modifiers: {
-                type: Type.OBJECT,
-                properties: allModifierProperties,
-            },
-            fullPrompt: {
-                type: Type.STRING,
-                description: "The final, usable prompt weaving together the base prompt and modifiers."
-            }
-        },
-        required: ['basePrompt', 'fullPrompt', 'modifiers']
+    switch (mode) {
+        case 'Video':
+            return `${basePrompt}
+            **Modality: Video Generation (e.g., Sora, Veo, Runway)**
+            **Task:** Write a "master prompt" as a single, dense paragraph (150-250 words) that functions as a detailed screenplay shot description for an 8-second video. It must be evocative, precise, and describe a complete micro-narrative.
+            **Directives:**
+            - Content Tone: ${options.contentTone}
+            - Point of View: ${options.pov}
+            - Quality: ${options.resolution}
+            - **Key Requirements:** Establish a narrative arc (beginning, middle, end). Be visually explicit about subjects, actions, environment, and cinematography. Define the atmosphere with powerful adjectives.
+            **Output Format:** A single paragraph starting directly with the description. No introductory text or markdown.`;
+
+        case 'Image':
+            return `${basePrompt}
+            **Modality: Image Generation (e.g., Imagen, Midjourney, DALL-E)**
+            **Task:** Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases. The prompt should be rich in technical and artistic terms.
+            **Directives:**
+            - Style: ${options.imageStyle}
+            - Tone & Mood: ${options.contentTone}
+            - Lighting: ${options.lighting}
+            - Framing: ${options.framing}
+            - Camera Angle: ${options.cameraAngle}
+            - Quality: ${options.resolution}
+            - Aspect Ratio: ${options.aspectRatio}
+            - Additional Details: "${options.additionalDetails}"
+            **Key Requirements:** Use descriptive keywords, not full sentences. Incorporate professional terminology from photography and art.
+            **Output Format:** A single, comma-separated string of keywords. No preamble, explanation, or markdown.`;
+
+        case 'Text':
+             return `${basePrompt}
+            **Modality: Text Generation (Large Language Models, e.g., Gemini, GPT-4)**
+            **Task:** Refine the user's prompt to be more specific, structured, and effective for an LLM. Clarify intent, add constraints, and define the desired output format.
+            **Directives:**
+            - Tone: ${options.contentTone}
+            - Desired Output Format: ${options.outputFormat}
+            **Key Requirements:** Enhance the original prompt by adding context, specifying a persona for the AI, providing examples (if applicable), and setting clear boundaries to prevent vague responses.
+            **Output Format:** The complete, enhanced text prompt, ready to be used.`;
+
+        case 'Audio':
+            return `${basePrompt}
+            **Modality: Audio Generation (e.g., Suno, ElevenLabs)**
+            **Task:** Create a rich, descriptive prompt for generating audio. This could be for music, speech, or sound effects.
+            **Directives:**
+            - Audio Type: ${options.audioType}
+            - Vibe / Mood: ${options.audioVibe}
+            - Tone: ${options.contentTone}
+            **Key Requirements:** If music, describe genre, tempo, instrumentation, and vocals. If speech, describe the speaker's voice, emotion, and pacing. If SFX, describe the sound's characteristics and environment.
+            **Output Format:** A descriptive paragraph tailored for an audio generation model.`;
+
+        case 'Code':
+            return `${basePrompt}
+            **Modality: Code Generation (e.g., Copilot, CodeWhisperer)**
+            **Task:** Convert a natural language request into a precise and clear instruction for a code generation model.
+            **Directives:**
+            - Programming Language: ${options.codeLanguage}
+            - Task: ${options.codeTask}
+            **Key Requirements:** Be unambiguous. Specify function names, parameters, expected return values, and logic. If debugging, provide the broken code and describe the error. If refactoring, state the goals (e.g., improve performance, readability).
+            **Output Format:** A well-commented, clear, and actionable prompt for a code generation AI.`;
+
+        default:
+            return 'You are a helpful assistant.';
     }
 };
-
-function buildSystemInstruction(mode, options, userPrompt) {
-    const frameworkPath = path.resolve(process.cwd(), 'api', 'prompt-framework.json');
-    const framework = JSON.parse(fs.readFileSync(frameworkPath, 'utf-8'));
-
-    const persona = framework.steps.find(step => step.name === "Persona Assignment").template;
-    const modalityConfig = framework.steps.find(step => step.name === "Modality-Specific Task Definition").modalities[mode];
-
-    if (!modalityConfig) {
-        return "You are a helpful assistant."; // Fallback
-    }
-
-    let modalityInstruction = modalityConfig.goal;
-    if (modalityConfig.directives_template) {
-        const directives = modalityConfig.directives_template;
-        for (const key in directives) {
-            const placeholder = directives[key];
-            const optionKey = placeholder.replace(/{{|}}/g, '');
-            if (options[optionKey]) {
-                directives[key] = options[optionKey];
-            }
-        }
-        modalityInstruction += `\n\nDirectives:\n${JSON.stringify(directives, null, 2)}`;
-    }
-
-    if (modalityConfig.key_requirements) {
-        modalityInstruction += `\n\nKey Requirements:\n- ${modalityConfig.key_requirements.join('\n- ')}`;
-    }
-
-    if (modalityConfig.output_format_instruction) {
-        modalityInstruction += `\n\nOutput Format:\n${modalityConfig.output_format_instruction}`;
-    }
-
-    const userInputInjection = framework.steps.find(step => step.name === "User Input Injection").template.replace('{{userPrompt}}', userPrompt);
-
-    return `${persona}\n\n${modalityInstruction}\n\n${userInputInjection}`;
-}
