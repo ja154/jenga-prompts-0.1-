@@ -170,11 +170,15 @@ function buildSystemInstruction(mode, options, userPrompt) {
 
     let modalityInstruction = modalityConfig.goal;
     if (modalityConfig.directives_template) {
-        let directives = JSON.stringify(modalityConfig.directives_template);
-        for (const key in options) {
-            directives = directives.replace(new RegExp(`{{${key}}}`, 'g'), options[key]);
+        const directives = modalityConfig.directives_template;
+        for (const key in directives) {
+            const placeholder = directives[key];
+            const optionKey = placeholder.replace(/{{|}}/g, '');
+            if (options[optionKey]) {
+                directives[key] = options[optionKey];
+            }
         }
-        modalityInstruction += `\n\nDirectives:\n${directives}`;
+        modalityInstruction += `\n\nDirectives:\n${JSON.stringify(directives, null, 2)}`;
     }
 
     if (modalityConfig.key_requirements) {
