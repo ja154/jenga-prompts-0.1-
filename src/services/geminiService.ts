@@ -1,6 +1,6 @@
 // src/services/geminiService.ts
 
-import { OutputStructure, PromptMode } from '../types'; 
+import { OutputStructure, PromptMode, EnhancedPromptResult } from '../types';
 
 export type EnhancePromptOptions = {
   userPrompt: string;
@@ -13,8 +13,8 @@ export async function getEnhancedPrompt({
   userPrompt,
   mode,
   options,
-  outputStructure = OutputStructure.Plain,  // default to plain-text
-}: EnhancePromptOptions) {
+  outputStructure = OutputStructure.Paragraph,  // default to plain-text
+}: EnhancePromptOptions): Promise<EnhancedPromptResult> {
   try {
     const apiUrl = '/api/gemini-non-stream';
     
@@ -52,12 +52,17 @@ export async function getEnhancedPrompt({
     const data = await response.json();
 
     // If they asked for JSON, just return the full object:
-    if (outputStructure === OutputStructure.JSON) {
-      return data as { prompt: string; parameters: Record<string, any> };
+    if (outputStructure === OutputStructure.SimpleJSON || outputStructure === OutputStructure.DetailedJSON) {
+      const result = data as { prompt: string; parameters: Record<string, any> };
+      return {
+          primaryResult: result.prompt,
+          jsonResult: JSON.stringify(result.parameters, null, 2),
+      };
     }
 
     // Otherwise return the raw prompt string:
-    return (data as { prompt: string }).prompt;
+    const prompt = (data as { prompt: string }).prompt;
+    return { primaryResult: prompt, jsonResult: undefined };
 
   } catch (error) {
     if (error instanceof Error) {
