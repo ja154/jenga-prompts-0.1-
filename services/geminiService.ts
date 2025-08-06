@@ -5,13 +5,33 @@ import { OutputStructure, PromptMode } from '../types';
 const getApiKey = () => {
   // For development
   if (typeof process !== 'undefined' && process.env) {
-    return process.env.API_KEY || process.env.VITE_GEMINI_API_KEY;
+    return process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   }
   // For production build (Vite injects VITE_ prefixed env vars)
   return (window as any).__GEMINI_API_KEY__ || (import.meta as any).env?.VITE_GEMINI_API_KEY;
 };
 
-const ai = new GoogleGenAI({ apiKey: getApiKey() });
+// Debug function to check API key
+const debugApiKey = () => {
+  const apiKey = getApiKey();
+  console.log('🔑 API Key Debug:');
+  console.log('- typeof process:', typeof process);
+  console.log('- process.env available:', typeof process !== 'undefined' && !!process.env);
+  if (typeof process !== 'undefined' && process.env) {
+    console.log('- process.env.GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'SET' : 'NOT SET');
+    console.log('- process.env.VITE_GEMINI_API_KEY:', process.env.VITE_GEMINI_API_KEY ? 'SET' : 'NOT SET');
+  }
+  console.log('- import.meta.env available:', !!(import.meta as any).env);
+  if ((import.meta as any).env) {
+    console.log('- import.meta.env.VITE_GEMINI_API_KEY:', (import.meta as any).env?.VITE_GEMINI_API_KEY ? 'SET' : 'NOT SET');
+  }
+  console.log('- Final API key:', apiKey ? 'FOUND' : 'NOT FOUND');
+  console.log('- API key length:', apiKey?.length || 0);
+  console.log('- API key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'N/A');
+  return apiKey;
+};
+
+const ai = new GoogleGenAI({ apiKey: debugApiKey() });
 
 // This defines all possible modifier keys that can be included in the detailed JSON output.
 // The model will only include the ones relevant to the user's request.
