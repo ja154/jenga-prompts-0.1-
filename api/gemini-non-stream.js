@@ -36,8 +36,8 @@ export default async function handler(req, res) {
         // Build system instruction based on mode and options
         const systemInstruction = buildSystemInstruction(mode, options);
 
-        const isSimpleJson = options.outputStructure === 'SimpleJSON';
-        const isDetailedJson = options.outputStructure === 'DetailedJSON';
+        const isSimpleJson = options.outputStructure === 'Simple JSON';
+        const isDetailedJson = options.outputStructure === 'Detailed JSON';
 
         const config = {
             systemInstruction,
