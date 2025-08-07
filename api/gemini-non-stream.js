@@ -47,7 +47,7 @@ export default async function handler(req, res) {
 
         const request = {
             model: 'gemini-1.5-flash',
-            contents: [{role: "user", parts: [{text: finalUserPrompt}]}],
+            contents: finalUserPrompt,
             systemInstruction: systemInstruction,
             generationConfig: {
                 temperature: 0.7,
