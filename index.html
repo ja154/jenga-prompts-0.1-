@@ -5,84 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JengaPrompts Pro - Universal Prompt Engineering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.9.0",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
-  }
-}
-</script>
-</head>
-
-  <body class="min-h-screen">
-    <div class="pattern-background"></div>
-    
-    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-      <header class="mb-8 sm:mb-12 text-center fade-in" style="animation-delay: 0.2s;">
-        <div class="inline-block mb-4 loader-container">
-          <div class="loader">
-            <div class="box1"></div>
-            <div class="box2"></div>
-            <div class="box3"></div>
-          </div>
-        </div>
-        <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold mb-3">
-          <span class="title-stroked">JengaPrompts Pro</span>
-        </h1>
-        <p class="text-white dark:text-gray-400 max-w-3xl mx-auto text-base sm:text-lg" style="text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);">
-          The professional toolkit to build, test, and optimize prompts for any AI model.
-        </p>
-      </header>
-      
-      <main id="root" class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8 sm:mb-12">
-        <!-- React App will be rendered here -->
-      </main>
-      
-      <section class="glass rounded-2xl p-6 sm:p-8 mb-8 sm:mb-12 fade-in" style="animation-delay: 0.8s;">
-        <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-center gradient-text">Your Universal Prompt Engineering Suite</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-slate-100 dark:bg-gray-800/50 hover:bg-slate-200 dark:hover:bg-gray-800/70 p-6 rounded-xl transition-all transform hover:-translate-y-1">
-            <div class="w-12 h-12 bg-purple-500/10 dark:bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
-              <i class="fas fa-cubes text-purple-500 dark:text-purple-400 text-xl"></i>
-            </div>
-            <h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-white">For Any Modality</h3>
-            <p class="text-slate-600 dark:text-gray-400 text-sm">Craft expert prompts for Text, Image, Video, Audio, and Code generation, all in one place.</p>
-          </div>
-          <div class="bg-slate-100 dark:bg-gray-800/50 hover:bg-slate-200 dark:hover:bg-gray-800/70 p-6 rounded-xl transition-all transform hover:-translate-y-1">
-            <div class="w-12 h-12 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg flex items-center justify-center mb-4">
-              <i class="fas fa-cogs text-blue-500 dark:text-blue-400 text-xl"></i>
-            </div>
-            <h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-white">Platform-Agnostic</h3>
-            <p class="text-slate-600 dark:text-gray-400 text-sm">Engineer prompts that work across different AI models like GPT-4, Midjourney, Sora, and more.</p>
-          </div>
-          <div class="bg-slate-100 dark:bg-gray-800/50 hover:bg-slate-200 dark:hover:bg-gray-800/70 p-6 rounded-xl transition-all transform hover:-translate-y-1">
-            <div class="w-12 h-12 bg-green-500/10 dark:bg-green-500/20 rounded-lg flex items-center justify-center mb-4">
-              <i class="fas fa-brain text-green-500 dark:text-green-400 text-xl"></i>
-            </div>
-            <h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-white">Structured Enhancement</h3>
-            <p class="text-slate-600 dark:text-gray-400 text-sm">Our AI adds the keywords, structure, and technical details that get superior results.</p>
-          </div>
-        </div>
-      </section>
-      
-      <footer class="text-center text-slate-500 dark:text-gray-500 text-sm fade-in" style="animation-delay: 1s;">
-        <div class="flex justify-center space-x-6 mb-4">
-          <a href="#" class="hover:text-slate-900 dark:hover:text-white transition-all"><i class="fab fa-twitter text-lg"></i></a>
-          <a href="#" class="hover:text-slate-900 dark:hover:text-white transition-all"><i class="fab fa-discord text-lg"></i></a>
-          <a href="#" class="hover:text-slate-900 dark:hover:text-white transition-all"><i class="fab fa-github text-lg"></i></a>
-          <a href="#" class="hover:text-slate-900 dark:hover:text-white transition-all"><i class="fas fa-envelope text-lg"></i></a>
-        </div>
-        <p>© 2024 JengaPrompts Pro. All rights reserved.</p>
-      </footer>
-    </div>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

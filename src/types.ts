@@ -131,3 +131,32 @@ export enum CodeTask {
     Explain = 'Explain Code',
     Document = 'Document Code (Docstrings)',
 }
+
+export interface PromptHistoryItemOptions {
+    contentTone: ContentTone;
+    outputStructure: OutputStructure;
+    pov: PointOfView;
+    videoResolution: CameraResolution;
+    aspectRatio: AspectRatio;
+    imageStyle: ImageStyle;
+    lighting: Lighting;
+    framing: Framing;
+    cameraAngle: CameraAngle;
+    imageResolution: CameraResolution;
+    additionalDetails: string;
+    outputFormat: string;
+    audioType: AudioType;
+    audioVibe: AudioVibe;
+    codeLanguage: CodeLanguage;
+    codeTask: CodeTask;
+}
+
+export interface PromptHistoryItem {
+    id: number;
+    timestamp: number;
+    mode: PromptMode;
+    userPrompt: string;
+    primaryResult: string;
+    jsonResult?: string;
+    options: PromptHistoryItemOptions;
+}
