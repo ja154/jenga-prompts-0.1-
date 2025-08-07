@@ -45,18 +45,21 @@ export default async function handler(req, res) {
 
         const finalUserPrompt = `Here is my core idea. Please generate the master prompt based on the instructions you have been given.\n\n**Core Idea:** "${userPrompt}"`;
 
-        const config = {
-            systemInstruction: {role: "system", parts: [{text: systemInstruction}]},
+        const model = ai.getGenerativeModel({
+          model: "gemini-1.5-flash",
+          systemInstruction: systemInstruction,
+        });
+
+        const generationConfig = {
             temperature: 0.7,
             topP: 0.95,
             topK: 40,
         };
 
-        const result = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: [{role: "user", parts: [{text: finalUserPrompt}]}],
-            ...config
-        });
+        const result = await model.generateContent(
+            finalUserPrompt,
+            generationConfig,
+        );
 
         const response = result.response;
 
