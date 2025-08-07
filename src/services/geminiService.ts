@@ -69,7 +69,8 @@ export async function getEnhancedPromptStream({
     onError?: (error: Error) => void;
 }) {
     try {
-        const apiUrl = '/api/gemini-stream';
+        // Try Hugging Face API first (free alternative)
+        const apiUrl = '/api/huggingface-stream';
         
         const response = await fetch(apiUrl, {
             method: 'POST',
