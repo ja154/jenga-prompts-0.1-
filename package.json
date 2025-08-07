@@ -10,6 +10,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "start:proxy": "node server.js",
+    "vercel-build": "npm run build"
     "preview": "vite preview"
   },
   "dependencies": {
@@ -31,6 +33,11 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.4.5",
-    "vite": "^7.0.6"
+    "vite": "^5.3.5"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "http-proxy-middleware": "^3.0.0"
+  }
   }
 }
