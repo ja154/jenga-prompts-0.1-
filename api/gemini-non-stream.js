@@ -43,6 +43,9 @@ export default async function handler(req, res) {
         // Build system instruction based on mode and options using the new logic
         const systemInstruction = buildSystemPrompt(mode, options);
 
+        const isSimpleJson = options.outputStructure === 'Simple JSON';
+        const isDetailedJson = options.outputStructure === 'Detailed JSON';
+
         const finalUserPrompt = `Here is my core idea. Please generate the master prompt based on the instructions you have been given.\n\n**Core Idea:** "${userPrompt}"`;
 
         const request = {
@@ -76,7 +79,12 @@ export default async function handler(req, res) {
 
         const enhancedPrompt = rawText.trim();
 
-        if (options.outputStructure === 'JSON') {
+        if (isSimpleJson) {
+            const jsonOutput = {
+                prompt: enhancedPrompt,
+            };
+            res.status(200).json(jsonOutput);
+        } else if (isDetailedJson) {
             const jsonOutput = {
                 prompt: enhancedPrompt,
                 parameters: {
@@ -84,7 +92,7 @@ export default async function handler(req, res) {
                     ...options
                 }
             };
-            if ('additionalDetails'in jsonOutput.parameters && jsonOutput.parameters.additionalDetails === '') {
+            if ('additionalDetails' in jsonOutput.parameters && jsonOutput.parameters.additionalDetails === '') {
                 delete jsonOutput.parameters.additionalDetails;
             }
             res.status(200).json(jsonOutput);
