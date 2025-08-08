@@ -134,3 +134,20 @@ export async function getEnhancedPromptStream({
         throw new Error(`Streaming error: ${errorMessage}`);
     }
 }
+
+export async function getHuggingFaceCompletion(prompt: string): Promise<any> {
+    const response = await fetch('/api/huggingface', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Hugging Face API request failed');
+    }
+
+    return response.json();
+}
