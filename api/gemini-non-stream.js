@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 // Vercel API route for non-streaming Gemini responses
 export default async function handler(req, res) {
@@ -40,60 +40,67 @@ export default async function handler(req, res) {
 
         const ai = new GoogleGenAI({ apiKey });
 
-        // Build system instruction based on mode and options
-        const systemInstruction = buildSystemInstruction(mode, options);
+        // Build system instruction based on mode and options using the new logic
+        const systemInstruction = buildSystemPrompt(mode, options);
 
-        const isSimpleJson = options.outputStructure === 'SimpleJSON';
-        const isDetailedJson = options.outputStructure === 'DetailedJSON';
+        const isSimpleJson = options.outputStructure === 'Simple JSON';
+        const isDetailedJson = options.outputStructure === 'Detailed JSON';
 
-        const config = {
-            systemInstruction,
-            temperature: 0.7,
-            topP: 0.95,
-            topK: 40,
+        const finalUserPrompt = `Here is my core idea. Please generate the master prompt based on the instructions you have been given.\n\n**Core Idea:** "${userPrompt}"`;
+
+        const request = {
+            model: 'gemini-1.5-flash',
+            contents: finalUserPrompt,
+            systemInstruction: systemInstruction,
+            generationConfig: {
+                temperature: 0.7,
+                topP: 0.95,
+                topK: 40,
+            }
         };
 
-        if (isSimpleJson || isDetailedJson) {
-            config.responseMimeType = "application/json";
-            config.responseSchema = isSimpleJson ? schemas.simple : schemas.detailed;
+        const result = await ai.models.generateContent(request);
+
+        const response = result.response;
+
+        if (!response || !response.candidates || response.candidates.length === 0) {
+            console.error('Invalid response from Gemini API:', JSON.stringify(result, null, 2));
+            // Check for specific block reasons
+            if (response && response.promptFeedback && response.promptFeedback.blockReason) {
+                throw new Error(`Request was blocked by the API. Reason: ${response.promptFeedback.blockReason}`);
+            }
+            throw new Error('Invalid or empty response from Gemini API');
         }
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: userPrompt,
-            config: config
-        });
-
-        const rawText = response.text;
+        const rawText = response.candidates[0].content.parts[0].text;
         if (!rawText) {
             throw new Error('Empty response from Gemini API');
         }
 
-        let primaryResult;
-        let jsonResult;
+        const enhancedPrompt = rawText.trim();
 
-        if (isSimpleJson || isDetailedJson) {
-            try {
-                const parsedJson = JSON.parse(rawText);
-                primaryResult = isDetailedJson ? parsedJson.fullPrompt : parsedJson.prompt;
-                if (typeof primaryResult !== 'string' || !primaryResult.trim()) {
-                     throw new Error("The model's JSON response is missing the required prompt content.");
+        if (isSimpleJson) {
+            const jsonOutput = {
+                prompt: enhancedPrompt,
+            };
+            res.status(200).json(jsonOutput);
+        } else if (isDetailedJson) {
+            const jsonOutput = {
+                prompt: enhancedPrompt,
+                parameters: {
+                    mode: mode,
+                    ...options
                 }
-                jsonResult = JSON.stringify(parsedJson, null, 2);
-            } catch (e) {
-                const error = new Error(`The model returned invalid JSON. See raw output for details. Parser error: ${e instanceof Error ? e.message : 'unknown'}`);
-                error.cause = { rawText };
-                throw error;
+            };
+            if ('additionalDetails' in jsonOutput.parameters && jsonOutput.parameters.additionalDetails === '') {
+                delete jsonOutput.parameters.additionalDetails;
             }
+            res.status(200).json(jsonOutput);
         } else {
-            primaryResult = rawText;
-            jsonResult = undefined;
+            res.status(200).json({
+                prompt: enhancedPrompt,
+            });
         }
-
-        res.status(200).json({
-            primaryResult,
-            jsonResult,
-        });
 
     } catch (error) {
         console.error('Error in non-streaming enhancement:', error);
@@ -110,110 +117,70 @@ export default async function handler(req, res) {
     }
 }
 
-const allModifierProperties = {
-    contentTone: { type: Type.STRING, description: "The tone/mood of the content." },
-    pov: { type: Type.STRING, description: "Point of view for video." },
-    resolution: { type: Type.STRING, description: "Resolution or detail level." },
-    imageStyle: { type: Type.STRING, description: "Artistic style for the image." },
-    lighting: { type: Type.STRING, description: "Lighting style for the image." },
-    framing: { type: Type.STRING, description: "Framing of the image shot." },
-    cameraAngle: { type: Type.STRING, description: "Camera angle for the image." },
-    aspectRatio: { type: Type.STRING, description: "Aspect ratio for the image." },
-    additionalDetails: { type: Type.STRING, description: "Any other specific details." },
-    outputFormat: { type: Type.STRING, description: "Format for text output." },
-    audioType: { type: Type.STRING, description: "Type of audio to generate." },
-    audioVibe: { type: Type.STRING, description: "Vibe/mood for the audio." },
-    codeLanguage: { type: Type.STRING, description: "Programming language for the code task." },
-    codeTask: { type: Type.STRING, description: "The task to perform on the code." },
-};
-
-const schemas = {
-    simple: {
-        type: Type.OBJECT,
-        properties: {
-            prompt: { type: Type.STRING, description: "The expertly crafted prompt." }
-        },
-        required: ['prompt']
-    },
-    detailed: {
-        type: Type.OBJECT,
-        properties: {
-            basePrompt: {
-                type: Type.STRING,
-                description: "The original user's core idea."
-            },
-            modifiers: {
-                type: Type.OBJECT,
-                properties: allModifierProperties,
-            },
-            fullPrompt: {
-                type: Type.STRING,
-                description: "The final, usable prompt weaving together the base prompt and modifiers."
-            }
-        },
-        required: ['basePrompt', 'fullPrompt', 'modifiers']
-    }
-};
-
-function buildSystemInstruction(mode, options) {
-    let instruction = `You are a world-class prompt engineer. Your mission is to expand a user's simple idea into a rich, detailed, and highly effective prompt for a generative AI model. The generated prompt should be a masterpiece of clarity and descriptive power.`;
-
-    if (options.outputStructure === 'Paragraph') {
-       instruction += ` Do not add any conversational text, prefixes, or explanations. Only output the final prompt.`;
-    }
-
-    let modeInstruction = '';
-    let paramsToIncorporate = '';
-
-    const addParam = (label, value) => {
-        if (value) {
-            paramsToIncorporate += `- ${label}: ${value}\n`;
-        }
-    };
+// New function to build the system prompt based on user's logic
+const buildSystemPrompt = (mode, options) => {
+    let basePrompt = `You are a world-class prompt engineer, a specialist in crafting detailed, effective prompts for AI models. Your task is to take a user's basic idea and transform it into a "master prompt" optimized for a specific modality.`;
 
     switch (mode) {
-        case 'Image':
-            modeInstruction = `The target model is a state-of-the-art AI image generator. Weave the following parameters into a fluid, descriptive paragraph. Do not just list them. The prompt should paint a vivid picture for the AI.`;
-            addParam('Style', options.imageStyle);
-            addParam('Mood/Tone', options.contentTone);
-            addParam('Lighting', options.lighting);
-            addParam('Framing', options.framing);
-            addParam('Camera Angle', options.cameraAngle);
-            addParam('Detail Level', options.resolution);
-            addParam('Aspect Ratio', options.aspectRatio);
-            addParam('Additional Specifics', options.additionalDetails);
-            break;
         case 'Video':
-            modeInstruction = `The target model is a state-of-the-art AI video generator. Describe a continuous scene, focusing on motion, atmosphere, and visual storytelling.`;
-            addParam('Tone', options.contentTone);
-            addParam('Point of View', options.pov);
-            addParam('Detail Level', options.resolution);
-            break;
+            return `${basePrompt}
+            **Modality: Video Generation (e.g., Sora, Veo, Runway)**
+            **Task:** Write a "master prompt" as a single, dense paragraph (150-250 words) that functions as a detailed screenplay shot description for an 8-second video. It must be evocative, precise, and describe a complete micro-narrative.
+            **Directives:**
+            - Content Tone: ${options.contentTone}
+            - Point of View: ${options.pov}
+            - Quality: ${options.resolution}
+            - **Key Requirements:** Establish a narrative arc (beginning, middle, end). Be visually explicit about subjects, actions, environment, and cinematography. Define the atmosphere with powerful adjectives.
+            **Output Format:** A single paragraph starting directly with the description. No introductory text or markdown.`;
+
+        case 'Image':
+            return `${basePrompt}
+            **Modality: Image Generation (e.g., Imagen, Midjourney, DALL-E)**
+            **Task:** Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases. The prompt should be rich in technical and artistic terms.
+            **Directives:**
+            - Style: ${options.imageStyle}
+            - Tone & Mood: ${options.contentTone}
+            - Lighting: ${options.lighting}
+            - Framing: ${options.framing}
+            - Camera Angle: ${options.cameraAngle}
+            - Quality: ${options.resolution}
+            - Aspect Ratio: ${options.aspectRatio}
+            - Additional Details: "${options.additionalDetails}"
+            **Key Requirements:** Use descriptive keywords, not full sentences. Incorporate professional terminology from photography and art.
+            **Output Format:** A single, comma-separated string of keywords. No preamble, explanation, or markdown.`;
+
         case 'Text':
-            modeInstruction = `The target is a large language model. Your goal is to refine the user's request into a crystal-clear and effective prompt for generating text.`;
-            addParam('Tone of Voice', options.contentTone);
-            addParam('Desired Output Format', options.outputFormat);
-            break;
+             return `${basePrompt}
+            **Modality: Text Generation (Large Language Models, e.g., Gemini, GPT-4)**
+            **Task:** Refine the user's prompt to be more specific, structured, and effective for an LLM. Clarify intent, add constraints, and define the desired output format.
+            **Directives:**
+            - Tone: ${options.contentTone}
+            - Desired Output Format: ${options.outputFormat}
+            **Key Requirements:** Enhance the original prompt by adding context, specifying a persona for the AI, providing examples (if applicable), and setting clear boundaries to prevent vague responses.
+            **Output Format:** The complete, enhanced text prompt, ready to be used.`;
+
         case 'Audio':
-            modeInstruction = `The target model is an AI audio/music generator. Describe the sound in detail, including instrumentation, tempo, and emotional feeling.`;
-            addParam('Audio Type', options.audioType);
-            addParam('Vibe/Mood', options.audioVibe);
-            addParam('Overall Tone', options.contentTone);
-            break;
+            return `${basePrompt}
+            **Modality: Audio Generation (e.g., Suno, ElevenLabs)**
+            **Task:** Create a rich, descriptive prompt for generating audio. This could be for music, speech, or sound effects.
+            **Directives:**
+            - Audio Type: ${options.audioType}
+            - Vibe / Mood: ${options.audioVibe}
+            - Tone: ${options.contentTone}
+            **Key Requirements:** If music, describe genre, tempo, instrumentation, and vocals. If speech, describe the speaker's voice, emotion, and pacing. If SFX, describe the sound's characteristics and environment.
+            **Output Format:** A descriptive paragraph tailored for an audio generation model.`;
+
         case 'Code':
-            modeInstruction = `The target model is a code generation AI. Create a precise and unambiguous prompt to accomplish the user's technical task. The prompt must provide sufficient context for the AI to generate, debug, or explain code correctly.`;
-            addParam('Language', options.codeLanguage);
-            addParam('Task', options.codeTask);
-            break;
+            return `${basePrompt}
+            **Modality: Code Generation (e.g., Copilot, CodeWhisperer)**
+            **Task:** Convert a natural language request into a precise and clear instruction for a code generation model.
+            **Directives:**
+            - Programming Language: ${options.codeLanguage}
+            - Task: ${options.codeTask}
+            **Key Requirements:** Be unambiguous. Specify function names, parameters, expected return values, and logic. If debugging, provide the broken code and describe the error. If refactoring, state the goals (e.g., improve performance, readability).
+            **Output Format:** A well-commented, clear, and actionable prompt for a code generation AI.`;
+
         default:
-            modeInstruction = `Generate a general-purpose, high-quality prompt.`;
-            break;
+            return 'You are a helpful assistant.';
     }
-
-    instruction += `\n\n### Task\n${modeInstruction}`;
-    if (paramsToIncorporate) {
-        instruction += `\n\n### Parameters to Incorporate\n${paramsToIncorporate}`;
-    }
-
-    return instruction;
-}
+};
