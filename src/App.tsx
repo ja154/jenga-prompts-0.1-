@@ -5,6 +5,8 @@ import { ContentTone, PointOfView, PromptMode, AspectRatio, ImageStyle, Lighting
 import { PromptTemplate } from './templates';
 import SuspenseLoader from './components/SuspenseLoader';
 
+const PromptLibrary = React.lazy(() => import('./components/PromptLibrary'));
+
 const ThemeToggle = ({ theme, toggleTheme }: { theme: string; toggleTheme: () => void }) => (
     <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50" aria-label="Toggle theme">
         <label className="switch">
@@ -115,6 +117,33 @@ const App = () => {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
     };
     
+    const handleUseTemplate = useCallback((template: PromptTemplate) => {
+        setPromptMode(template.mode);
+        setUserPrompt(template.prompt);
+
+        // Apply template-specific settings, only if they exist, to pre-configure the UI
+        if (template.contentTone) setContentTone(template.contentTone);
+
+        if (template.mode === PromptMode.Image) {
+            if (template.imageStyle) setImageStyle(template.imageStyle);
+            if (template.lighting) setLighting(template.lighting);
+            if (template.framing) setFraming(template.framing);
+            if (template.cameraAngle) setCameraAngle(template.cameraAngle);
+            if (template.resolution) setImageResolution(template.resolution);
+            if (template.aspectRatio) setAspectRatio(template.aspectRatio);
+        }
+
+        if (template.mode === PromptMode.Video) {
+            if (template.pov) setPov(template.pov);
+            if (template.resolution) setVideoResolution(template.resolution);
+        }
+
+        // Scroll to the input section to show the user the result
+        setTimeout(() => {
+            inputSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }, []);
+
     const handleGenerateClick = useCallback(async () => {
         if (!userPrompt.trim()) return;
         
@@ -474,6 +503,9 @@ const App = () => {
                 </div>
             </section>
             
+            <Suspense fallback={<SuspenseLoader />}>
+                <PromptLibrary onUseTemplate={handleUseTemplate} />
+            </Suspense>
         </>
     );
 };
