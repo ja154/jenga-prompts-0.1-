@@ -222,6 +222,7 @@ const App = () => {
         
         try {
             const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options });
+            console.log('API Result:', result);
             setPrimaryResult(result.prompt);
             setJsonResult(JSON.stringify(result, null, 2));
 
