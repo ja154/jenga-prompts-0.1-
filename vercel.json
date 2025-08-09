@@ -2,13 +2,16 @@
   "version": 2,
   "functions": {
     "api/**/*.js": {
-      "runtime": "@vercel/node@3.0.0"
+      "runtime": "@vercel/node@3.0.0",
+      "installCommand": "",
+      "includeFiles": [
+        "api/**",
+        "package.json",
+        "package-lock.json",
+        "node_modules/@google/genai/**"
+      ]
     }
   },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" }
-  ],
-  "installCommand": "npm install",
-  "buildCommand": "tsc && vite build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist"
 }
