@@ -1,14 +1,7 @@
 {
   "version": 2,
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "@vercel/node@3.0.0",
-      "includeFiles": [
-        "api/**",
-        "node_modules/@google/genai/**"
-      ]
-    }
-  },
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "builds": [
+    { "src": "package.json", "use": "@vercel/vite" },
+    { "src": "api/**/*.js", "use": "@vercel/node@3.0.0" }
+  ]
 }
