@@ -11,7 +11,6 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "start:proxy": "node server.js",
-    "vercel-build": "npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
