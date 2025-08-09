@@ -8,9 +8,6 @@
       "runtime": "@vercel/node@3.0.0"
     }
   },
-  "builds": [
-    { "src": "package.json", "use": "@vercel/node@3.0.0" }
-  ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" }
   ],
