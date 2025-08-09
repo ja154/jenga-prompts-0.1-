@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build:api": "esbuild api/*.js --bundle --platform=node --outdir=dist/api",
+    "build": "npm run build:api && tsc && vite build",
     "start:proxy": "node server.js",
     "preview": "vite preview"
   },
@@ -28,6 +29,7 @@
     "@typescript-eslint/parser": "^7.13.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "esbuild": "^0.20.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
