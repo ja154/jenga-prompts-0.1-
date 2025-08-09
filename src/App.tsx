@@ -222,8 +222,8 @@ const App = () => {
         
         try {
             const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options });
-            setPrimaryResult(result.primaryResult);
-            setJsonResult(result.jsonResult);
+            setPrimaryResult(result.prompt);
+            setJsonResult(JSON.stringify(result, null, 2));
 
             const currentOptions: PromptHistoryItemOptions = {
                 contentTone, outputStructure, pov, videoResolution, aspectRatio,
@@ -237,8 +237,8 @@ const App = () => {
                 timestamp: Date.now(),
                 mode: promptMode,
                 userPrompt,
-                primaryResult: result.primaryResult,
-                jsonResult: result.jsonResult,
+                primaryResult: result.prompt,
+                jsonResult: JSON.stringify(result, null, 2),
                 options: currentOptions,
             };
 
