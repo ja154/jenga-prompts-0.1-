@@ -1,4 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
+import fs from 'fs';
+import path from 'path';
 
 // Vercel API route for streaming Gemini responses
 export default async function handler(req, res) {
@@ -118,7 +120,14 @@ function buildSystemInstruction(mode, options) {
             addParam('Additional Specifics', options.additionalDetails);
             break;
         case 'Video':
-            modeInstruction = `The target model is a state-of-the-art AI video generator. Describe a continuous scene, focusing on motion, atmosphere, and visual storytelling.`;
+            try {
+                const frameworkPath = path.join(process.cwd(), 'src', 'video-prompt-framework.md');
+                modeInstruction = fs.readFileSync(frameworkPath, 'utf-8');
+            } catch (error) {
+                console.error('Error reading video prompt framework:', error);
+                // Fallback to old instruction
+                modeInstruction = `The target model is a state-of-the-art AI video generator. Describe a continuous scene, focusing on motion, atmosphere, and visual storytelling.`;
+            }
             addParam('Tone', options.contentTone);
             addParam('Point of View', options.pov);
             addParam('Detail Level', options.resolution);
