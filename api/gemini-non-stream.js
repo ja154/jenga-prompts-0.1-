@@ -134,20 +134,28 @@ const buildFinalPrompt = (mode, options, userPrompt) => {
             break;
 
         case 'Image':
-            finalPrompt += `
-            **Modality: Image Generation (e.g., Imagen, Midjourney, DALL-E)**
-            **Task:** Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases. The prompt should be rich in technical and artistic terms.
-            **Directives:**
-            - Style: ${options.imageStyle}
-            - Tone & Mood: ${options.contentTone}
-            - Lighting: ${options.lighting}
-            - Framing: ${options.framing}
-            - Camera Angle: ${options.cameraAngle}
-            - Quality: ${options.resolution}
-            - Aspect Ratio: ${options.aspectRatio}
-            - Additional Details: "${options.additionalDetails}"
-            **Key Requirements:** Use descriptive keywords, not full sentences. Incorporate professional terminology from photography and art.
-            **Output Format:** A single, comma-separated string of keywords.`;
+            try {
+                const frameworkPath = path.join(process.cwd(), 'src', 'image-prompt-framework.md');
+                const frameworkText = fs.readFileSync(frameworkPath, 'utf-8');
+                finalPrompt = frameworkText + `\n\n**Core Idea:** "${userPrompt}"\n\n**Directives:**\n- Style: ${options.imageStyle}\n- Tone & Mood: ${options.contentTone}\n- Lighting: ${options.lighting}\n- Framing: ${options.framing}\n- Camera Angle: ${options.cameraAngle}\n- Quality: ${options.resolution}\n- Aspect Ratio: ${options.aspectRatio}\n- Additional Details: "${options.additionalDetails}"`;
+            } catch (error) {
+                console.error('Error reading image prompt framework:', error);
+                // Fallback to old prompt
+                finalPrompt += `
+                **Modality: Image Generation (e.g., Imagen, Midjourney, DALL-E)**
+                **Task:** Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases. The prompt should be rich in technical and artistic terms.
+                **Directives:**
+                - Style: ${options.imageStyle}
+                - Tone & Mood: ${options.contentTone}
+                - Lighting: ${options.lighting}
+                - Framing: ${options.framing}
+                - Camera Angle: ${options.cameraAngle}
+                - Quality: ${options.resolution}
+                - Aspect Ratio: ${options.aspectRatio}
+                - Additional Details: "${options.additionalDetails}"
+                **Key Requirements:** Use descriptive keywords, not full sentences. Incorporate professional terminology from photography and art.
+                **Output Format:** A single, comma-separated string of keywords.`;
+            }
             break;
 
         case 'Text':

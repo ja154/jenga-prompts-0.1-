@@ -109,7 +109,14 @@ function buildSystemInstruction(mode, options) {
 
     switch (mode) {
         case 'Image':
-            modeInstruction = `The target model is a state-of-the-art AI image generator. Weave the following parameters into a fluid, descriptive paragraph. Do not just list them. The prompt should paint a vivid picture for the AI.`;
+            try {
+                const frameworkPath = path.join(process.cwd(), 'src', 'image-prompt-framework.md');
+                modeInstruction = fs.readFileSync(frameworkPath, 'utf-8');
+            } catch (error) {
+                console.error('Error reading image prompt framework:', error);
+                // Fallback to old instruction
+                modeInstruction = `The target model is a state-of-the-art AI image generator. Weave the following parameters into a fluid, descriptive paragraph. Do not just list them. The prompt should paint a vivid picture for the AI.`;
+            }
             addParam('Style', options.imageStyle);
             addParam('Mood/Tone', options.contentTone);
             addParam('Lighting', options.lighting);
