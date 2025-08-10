@@ -20,14 +20,14 @@ const App = () => {
 
     // Shared state
     const [contentTone, setContentTone] = useState<ContentTone>(ContentTone.Neutral);
-    const [outputStructure, setOutputStructure] = useState<OutputStructure>(OutputStructure.Default);
+    const [outputStructure, setOutputStructure] = useState<OutputStructure>(OutputStructure.Paragraph);
     
     // Video state
     const [pov, setPov] = useState<PointOfView>(PointOfView.ThirdPerson);
     const [videoResolution, setVideoResolution] = useState<CameraResolution>(CameraResolution.FourK);
 
     // Image state
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.Landscape_16_9);
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.Landscape);
     const [imageStyle, setImageStyle] = useState<ImageStyle>(ImageStyle.Cinematic);
     const [lighting, setLighting] = useState<Lighting>(Lighting.GoldenHour);
     const [framing, setFraming] = useState<Framing>(Framing.MediumShot);
