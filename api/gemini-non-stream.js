@@ -1,4 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
+import fs from 'fs';
+import path from 'path';
 
 // Vercel API route for non-streaming Gemini responses
 export default async function handler(req, res) {
@@ -112,32 +114,48 @@ const buildFinalPrompt = (mode, options, userPrompt) => {
 
     switch (mode) {
         case 'Video':
-            finalPrompt += `
-            **Modality: Video Generation (e.g., Sora, Veo, Runway)**
-            **Task:** Write a "master prompt" as a single, dense paragraph (150-250 words) that functions as a detailed screenplay shot description for an 8-second video. It must be evocative, precise, and describe a complete micro-narrative.
-            **Directives:**
-            - Content Tone: ${options.contentTone}
-            - Point of View: ${options.pov}
-            - Quality: ${options.resolution}
-            - **Key Requirements:** Establish a narrative arc (beginning, middle, end). Be visually explicit about subjects, actions, environment, and cinematography. Define the atmosphere with powerful adjectives.
-            **Output Format:** A single paragraph starting directly with the description.`;
+            try {
+                const frameworkPath = path.join(process.cwd(), 'src', 'video-prompt-framework.md');
+                const frameworkText = fs.readFileSync(frameworkPath, 'utf-8');
+                finalPrompt = frameworkText + `\n\n**Core Idea:** "${userPrompt}"\n\n**Directives:**\n- Content Tone: ${options.contentTone}\n- Point of View: ${options.pov}\n- Quality: ${options.resolution}`;
+            } catch (error) {
+                console.error('Error reading video prompt framework:', error);
+                // Fallback to old prompt
+                finalPrompt += `
+                **Modality: Video Generation (e.g., Sora, Veo, Runway)**
+                **Task:** Write a "master prompt" as a single, dense paragraph (150-250 words) that functions as a detailed screenplay shot description for an 8-second video. It must be evocative, precise, and describe a complete micro-narrative.
+                **Directives:**
+                - Content Tone: ${options.contentTone}
+                - Point of View: ${options.pov}
+                - Quality: ${options.resolution}
+                - **Key Requirements:** Establish a narrative arc (beginning, middle, end). Be visually explicit about subjects, actions, environment, and cinematography. Define the atmosphere with powerful adjectives.
+                **Output Format:** A single paragraph starting directly with the description.`;
+            }
             break;
 
         case 'Image':
-            finalPrompt += `
-            **Modality: Image Generation (e.g., Imagen, Midjourney, DALL-E)**
-            **Task:** Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases. The prompt should be rich in technical and artistic terms.
-            **Directives:**
-            - Style: ${options.imageStyle}
-            - Tone & Mood: ${options.contentTone}
-            - Lighting: ${options.lighting}
-            - Framing: ${options.framing}
-            - Camera Angle: ${options.cameraAngle}
-            - Quality: ${options.resolution}
-            - Aspect Ratio: ${options.aspectRatio}
-            - Additional Details: "${options.additionalDetails}"
-            **Key Requirements:** Use descriptive keywords, not full sentences. Incorporate professional terminology from photography and art.
-            **Output Format:** A single, comma-separated string of keywords.`;
+            try {
+                const frameworkPath = path.join(process.cwd(), 'src', 'image-prompt-framework.md');
+                const frameworkText = fs.readFileSync(frameworkPath, 'utf-8');
+                finalPrompt = frameworkText + `\n\n**Core Idea:** "${userPrompt}"\n\n**Directives:**\n- Style: ${options.imageStyle}\n- Tone & Mood: ${options.contentTone}\n- Lighting: ${options.lighting}\n- Framing: ${options.framing}\n- Camera Angle: ${options.cameraAngle}\n- Quality: ${options.resolution}\n- Aspect Ratio: ${options.aspectRatio}\n- Additional Details: "${options.additionalDetails}"`;
+            } catch (error) {
+                console.error('Error reading image prompt framework:', error);
+                // Fallback to old prompt
+                finalPrompt += `
+                **Modality: Image Generation (e.g., Imagen, Midjourney, DALL-E)**
+                **Task:** Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases. The prompt should be rich in technical and artistic terms.
+                **Directives:**
+                - Style: ${options.imageStyle}
+                - Tone & Mood: ${options.contentTone}
+                - Lighting: ${options.lighting}
+                - Framing: ${options.framing}
+                - Camera Angle: ${options.cameraAngle}
+                - Quality: ${options.resolution}
+                - Aspect Ratio: ${options.aspectRatio}
+                - Additional Details: "${options.additionalDetails}"
+                **Key Requirements:** Use descriptive keywords, not full sentences. Incorporate professional terminology from photography and art.
+                **Output Format:** A single, comma-separated string of keywords.`;
+            }
             break;
 
         case 'Text':
