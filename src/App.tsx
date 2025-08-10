@@ -258,6 +258,7 @@ const App = () => {
 
     return (
         <>
+            <div className="pattern-background"></div>
             <div className="sidebar">
                 <img src="/logo.png" alt="Logo" onError={(e) => e.currentTarget.style.display = 'none'}/>
                 <h1>JengaPrompts</h1>
@@ -282,51 +283,61 @@ const App = () => {
                     </div>
                 </div>
 
-                <div className="content-types">
-                    <button onClick={() => setPromptMode(PromptMode.Text)}>Text</button>
-                    <button onClick={() => setPromptMode(PromptMode.Image)}>Image</button>
-                    <button onClick={() => setPromptMode(PromptMode.Video)}>Video</button>
-                    <button onClick={() => setPromptMode(PromptMode.Audio)}>Audio</button>
-                    <button onClick={() => setPromptMode(PromptMode.Code)}>Code</button>
-                </div>
-
-                {error && <div style={{ color: 'red', padding: '1rem' }}>{error}</div>}
-
-                <div className="prompt-section">
-                    <textarea 
-                        placeholder="Enter your prompt..."
-                        value={userPrompt}
-                        onChange={(e) => setUserPrompt(e.target.value)}
-                    />
-                    <button onClick={handleGenerateClick} disabled={isLoading}>
-                        {isLoading ? loadingMessage : 'Enhance Prompt'}
-                    </button>
-                </div>
-
-                <div className="modifiers">
-                    <details open>
-                        <summary>Modifiers</summary>
-                        {renderModeOptions()}
-                    </details>
-                </div>
-
-                <div className="output-section">
-                    <div className="output-toggle">
-                        <button onClick={() => setActiveOutputTab('plain')}>Plain Text</button>
-                        <button onClick={() => setActiveOutputTab('json')}>JSON</button>
+                <div style={{ padding: '0 1rem' }}>
+                    <div className="content-types">
+                        <button onClick={() => setPromptMode(PromptMode.Text)}>Text</button>
+                        <button onClick={() => setPromptMode(PromptMode.Image)}>Image</button>
+                        <button onClick={() => setPromptMode(PromptMode.Video)}>Video</button>
+                        <button onClick={() => setPromptMode(PromptMode.Audio)}>Audio</button>
+                        <button onClick={() => setPromptMode(PromptMode.Code)}>Code</button>
                     </div>
-                    <textarea
-                        placeholder="Output..."
-                        rows={6}
-                        value={activeOutputTab === 'plain' ? primaryResult : jsonResult}
-                        readOnly
-                    />
-                </div>
 
-                <div className="templates">
-                    <h3>Templates</h3>
-                    <div className="template-cards">
-                        {renderTemplates()}
+                    {error && <div className="glass" style={{ borderRadius: '1rem', marginBottom: '1rem', padding: '1rem', color: 'red' }}>{error}</div>}
+
+                    <div className="glass" style={{ borderRadius: '1rem', marginBottom: '1rem' }}>
+                        <div className="prompt-section">
+                            <textarea
+                                placeholder="Enter your prompt..."
+                                value={userPrompt}
+                                onChange={(e) => setUserPrompt(e.target.value)}
+                            />
+                            <button onClick={handleGenerateClick} disabled={isLoading}>
+                                {isLoading ? loadingMessage : 'Enhance Prompt'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="glass" style={{ borderRadius: '1rem', marginBottom: '1rem' }}>
+                        <div className="modifiers">
+                            <details open>
+                                <summary>Modifiers</summary>
+                                {renderModeOptions()}
+                            </details>
+                        </div>
+                    </div>
+
+                    <div className="glass" style={{ borderRadius: '1rem', marginBottom: '1rem' }}>
+                        <div className="output-section">
+                            <div className="output-toggle">
+                                <button onClick={() => setActiveOutputTab('plain')}>Plain Text</button>
+                                <button onClick={() => setActiveOutputTab('json')}>JSON</button>
+                            </div>
+                            <textarea
+                                placeholder="Output..."
+                                rows={6}
+                                value={activeOutputTab === 'plain' ? primaryResult : jsonResult}
+                                readOnly
+                            />
+                        </div>
+                    </div>
+
+                    <div className="glass" style={{ borderRadius: '1rem', marginBottom: '1rem' }}>
+                        <div className="templates">
+                            <h3>Templates</h3>
+                            <div className="template-cards">
+                                {renderTemplates()}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
