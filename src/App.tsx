@@ -177,11 +177,11 @@ const App = () => {
         switch (promptMode) {
             case PromptMode.Video:
                 loadingMsg = 'Crafting your cinematic video prompt...';
-                options = { contentTone, pov, resolution: videoResolution, outputStructure, videoDuration, wordCount };
+                options = { contentTone, pov, resolution: videoResolution, outputStructure, videoDuration, wordCount, videoModel };
                 break;
             case PromptMode.Image:
                 loadingMsg = 'Engineering your visual prompt...';
-                options = { contentTone, imageStyle, lighting, framing, cameraAngle, resolution: imageResolution, aspectRatio, additionalDetails, outputStructure, wordCount };
+                options = { contentTone, imageStyle, lighting, framing, cameraAngle, resolution: imageResolution, aspectRatio, additionalDetails, outputStructure, wordCount, imageModel };
                 break;
             case PromptMode.Text:
                 loadingMsg = 'Refining your text prompt...';
@@ -200,31 +200,16 @@ const App = () => {
         setLoadingMessage(loadingMsg);
         
         try {
-            let resultPrompt: string;
-            let resultJson: string;
+            // This logic is now unified for all prompt modes.
+            const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options });
 
-            if (promptMode === PromptMode.Image || promptMode === PromptMode.Video) {
-                loadingMsg = 'Adapting prompt for the selected model...';
-                setLoadingMessage(loadingMsg);
+            // The AI is now expected to return a JSON object (as a string, which getEnhancedPrompt parses).
+            // We will stringify it for display.
+            const resultJson = JSON.stringify(result, null, 2);
+            const resultPrompt = resultJson; // The primary result is the JSON itself.
 
-                const modelKey = promptMode === PromptMode.Image ? imageModel : videoModel;
-                const transformed = transformPrompt({ userPrompt, mode: promptMode, modelKey, options });
-
-                resultPrompt = transformed.prompt;
-                resultJson = JSON.stringify(transformed, null, 2);
-
-                setPrimaryResult(resultPrompt);
-                setJsonResult(resultJson);
-
-            } else {
-                const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options });
-                console.log('API Result:', result);
-                resultPrompt = result.prompt;
-                resultJson = JSON.stringify(result, null, 2);
-
-                setPrimaryResult(resultPrompt);
-                setJsonResult(resultJson);
-            }
+            setPrimaryResult(resultPrompt);
+            setJsonResult(resultJson);
 
             const currentOptions: PromptHistoryItemOptions = {
                 contentTone, outputStructure, pov, videoResolution, aspectRatio,
