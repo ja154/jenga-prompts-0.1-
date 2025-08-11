@@ -24,3 +24,15 @@ export const AUDIO_TYPE_OPTIONS = Object.values(AudioType);
 export const AUDIO_VIBE_OPTIONS = Object.values(AudioVibe);
 export const CODE_LANGUAGE_OPTIONS = Object.values(CodeLanguage);
 export const CODE_TASK_OPTIONS = Object.values(CodeTask);
+
+export const VIDEO_DURATION_OPTIONS = [
+    { label: 'Up to 6 seconds', value: '6' },
+    { label: 'Up to 15 seconds', value: '15' },
+    { label: 'Up to 30 seconds', value: '30' },
+];
+
+export const WORD_COUNT_OPTIONS = [
+    { label: 'Brief (~100 words)', value: '100' },
+    { label: 'Standard (~250 words)', value: '250' },
+    { label: 'Detailed (~500 words)', value: '500' },
+];

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense, CSSProperties } from 'react';
 import { getEnhancedPrompt } from './services/geminiService';
 import { transformPrompt, validatePrompt } from './services/promptTransformer';
-import { TONE_OPTIONS, POV_OPTIONS, ASPECT_RATIO_OPTIONS, IMAGE_STYLE_OPTIONS, LIGHTING_OPTIONS, FRAMING_OPTIONS, CAMERA_ANGLE_OPTIONS, CAMERA_RESOLUTION_OPTIONS, TEXT_FORMAT_OPTIONS, AUDIO_TYPE_OPTIONS, AUDIO_VIBE_OPTIONS, CODE_LANGUAGE_OPTIONS, CODE_TASK_OPTIONS, OUTPUT_STRUCTURE_OPTIONS } from './constants';
+import { TONE_OPTIONS, POV_OPTIONS, ASPECT_RATIO_OPTIONS, IMAGE_STYLE_OPTIONS, LIGHTING_OPTIONS, FRAMING_OPTIONS, CAMERA_ANGLE_OPTIONS, CAMERA_RESOLUTION_OPTIONS, TEXT_FORMAT_OPTIONS, AUDIO_TYPE_OPTIONS, AUDIO_VIBE_OPTIONS, CODE_LANGUAGE_OPTIONS, CODE_TASK_OPTIONS, OUTPUT_STRUCTURE_OPTIONS, VIDEO_DURATION_OPTIONS, WORD_COUNT_OPTIONS } from './constants';
 import { ContentTone, PointOfView, PromptMode, AspectRatio, ImageStyle, Lighting, Framing, CameraAngle, CameraResolution, AudioType, AudioVibe, CodeLanguage, CodeTask, OutputStructure, PromptHistoryItem, PromptHistoryItemOptions } from './types';
 import { PromptTemplate } from './templates';
 import SuspenseLoader from './components/SuspenseLoader';
@@ -51,30 +51,32 @@ const App = () => {
     const inputSectionRef = useRef<HTMLElement>(null);
 
     // Shared state
-    const [contentTone, setContentTone] = useState<ContentTone>(ContentTone.Neutral);
+    const [contentTone, setContentTone] = useState<ContentTone | ''>('');
     const [outputStructure, setOutputStructure] = useState<OutputStructure>(OutputStructure.Paragraph);
     
     // Video state
-    const [pov, setPov] = useState<PointOfView>(PointOfView.ThirdPerson);
-    const [videoResolution, setVideoResolution] = useState<CameraResolution>(CameraResolution.FourK);
+    const [pov, setPov] = useState<PointOfView | ''>('');
+    const [videoResolution, setVideoResolution] = useState<CameraResolution | ''>('');
     const [videoModel, setVideoModel] = useState<string>(Object.keys(modelSpecs['text-to-video'])[0]);
+    const [videoDuration, setVideoDuration] = useState<string>('15');
+    const [wordCount, setWordCount] = useState<string>('250');
 
     // Image state
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.Landscape);
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio | ''>('');
     const [imageModel, setImageModel] = useState<string>(Object.keys(modelSpecs['text-to-image'])[0]);
-    const [imageStyle, setImageStyle] = useState<ImageStyle>(ImageStyle.Cinematic);
-    const [lighting, setLighting] = useState<Lighting>(Lighting.GoldenHour);
-    const [framing, setFraming] = useState<Framing>(Framing.MediumShot);
-    const [cameraAngle, setCameraAngle] = useState<CameraAngle>(CameraAngle.Frontal);
-    const [imageResolution, setImageResolution] = useState<CameraResolution>(CameraResolution.Hyperdetailed);
+    const [imageStyle, setImageStyle] = useState<ImageStyle | ''>('');
+    const [lighting, setLighting] = useState<Lighting | ''>('');
+    const [framing, setFraming] = useState<Framing | ''>('');
+    const [cameraAngle, setCameraAngle] = useState<CameraAngle | ''>('');
+    const [imageResolution, setImageResolution] = useState<CameraResolution | ''>('');
     const [additionalDetails, setAdditionalDetails] = useState('');
 
     // Text state
     const [outputFormat, setOutputFormat] = useState('Plain Text');
     
     // Audio state
-    const [audioType, setAudioType] = useState<AudioType>(AudioType.Music);
-    const [audioVibe, setAudioVibe] = useState<AudioVibe>(AudioVibe.Atmospheric);
+    const [audioType, setAudioType] = useState<AudioType | ''>('');
+    const [audioVibe, setAudioVibe] = useState<AudioVibe | ''>('');
 
     // Code state
     const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>(CodeLanguage.JavaScript);
@@ -137,20 +139,20 @@ const App = () => {
         setUserPrompt(template.prompt);
 
         // Apply template-specific settings, only if they exist, to pre-configure the UI
-        if (template.contentTone) setContentTone(template.contentTone);
+        setContentTone(template.contentTone || '');
 
         if (template.mode === PromptMode.Image) {
-            if (template.imageStyle) setImageStyle(template.imageStyle);
-            if (template.lighting) setLighting(template.lighting);
-            if (template.framing) setFraming(template.framing);
-            if (template.cameraAngle) setCameraAngle(template.cameraAngle);
-            if (template.resolution) setImageResolution(template.resolution);
-            if (template.aspectRatio) setAspectRatio(template.aspectRatio);
+            setImageStyle(template.imageStyle || '');
+            setLighting(template.lighting || '');
+            setFraming(template.framing || '');
+            setCameraAngle(template.cameraAngle || '');
+            setImageResolution(template.resolution || '');
+            setAspectRatio(template.aspectRatio || '');
         }
 
         if (template.mode === PromptMode.Video) {
-            if (template.pov) setPov(template.pov);
-            if (template.resolution) setVideoResolution(template.resolution);
+            setPov(template.pov || '');
+            setVideoResolution(template.resolution || '');
         }
 
         // Scroll to the input section to show the user the result
@@ -175,19 +177,19 @@ const App = () => {
         switch (promptMode) {
             case PromptMode.Video:
                 loadingMsg = 'Crafting your cinematic video prompt...';
-                options = { contentTone, pov, resolution: videoResolution, outputStructure };
+                options = { contentTone, pov, resolution: videoResolution, outputStructure, videoDuration, wordCount, videoModel };
                 break;
             case PromptMode.Image:
                 loadingMsg = 'Engineering your visual prompt...';
-                options = { contentTone, imageStyle, lighting, framing, cameraAngle, resolution: imageResolution, aspectRatio, additionalDetails, outputStructure };
+                options = { contentTone, imageStyle, lighting, framing, cameraAngle, resolution: imageResolution, aspectRatio, additionalDetails, outputStructure, wordCount, imageModel };
                 break;
             case PromptMode.Text:
                 loadingMsg = 'Refining your text prompt...';
-                options = { contentTone, outputFormat, outputStructure };
+                options = { contentTone, outputFormat, outputStructure, wordCount };
                 break;
             case PromptMode.Audio:
                 loadingMsg = 'Composing your audio prompt...';
-                options = { contentTone, audioType, audioVibe, outputStructure };
+                options = { contentTone, audioType, audioVibe, outputStructure, wordCount };
                 break;
             case PromptMode.Code:
                 loadingMsg = 'Constructing your code prompt...';
@@ -198,38 +200,46 @@ const App = () => {
         setLoadingMessage(loadingMsg);
         
         try {
-            let resultPrompt: string;
-            let resultJson: string;
-
-            if (promptMode === PromptMode.Image || promptMode === PromptMode.Video) {
-                loadingMsg = 'Adapting prompt for the selected model...';
-                setLoadingMessage(loadingMsg);
-
-                const modelKey = promptMode === PromptMode.Image ? imageModel : videoModel;
-                const transformed = transformPrompt({ userPrompt, mode: promptMode, modelKey, options });
-
-                resultPrompt = transformed.prompt;
-                resultJson = JSON.stringify(transformed, null, 2);
-
-                setPrimaryResult(resultPrompt);
-                setJsonResult(resultJson);
-
-            } else {
-                const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options });
-                console.log('API Result:', result);
-                resultPrompt = result.prompt;
-                resultJson = JSON.stringify(result, null, 2);
-
-                setPrimaryResult(resultPrompt);
-                setJsonResult(resultJson);
+            // Filter out any "Default" options (represented by empty strings)
+            const filteredOptions: Record<string, any> = {};
+            for (const key in options) {
+                if (options[key] !== '') {
+                    filteredOptions[key] = options[key];
+                }
             }
 
+            // This logic is now unified for all prompt modes.
+            const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options: filteredOptions });
+
+            // The AI is now expected to return a JSON object (as a string, which getEnhancedPrompt parses).
+            // We will stringify it for display.
+            const resultJson = JSON.stringify(result, null, 2);
+            const resultPrompt = resultJson; // The primary result is the JSON itself.
+
+            setPrimaryResult(resultPrompt);
+            setJsonResult(resultJson);
+
             const currentOptions: PromptHistoryItemOptions = {
-                contentTone, outputStructure, pov, videoResolution, aspectRatio,
-                imageStyle, lighting, framing, cameraAngle, imageResolution,
-                additionalDetails, outputFormat, audioType, audioVibe,
-                codeLanguage, codeTask,
-                imageModel, videoModel
+                contentTone: contentTone || ContentTone.Neutral,
+                outputStructure,
+                pov: pov || PointOfView.ThirdPerson,
+                videoResolution: videoResolution || CameraResolution.FourK,
+                aspectRatio: aspectRatio || AspectRatio.Landscape,
+                imageStyle: imageStyle || ImageStyle.Cinematic,
+                lighting: lighting || Lighting.GoldenHour,
+                framing: framing || Framing.MediumShot,
+                cameraAngle: cameraAngle || CameraAngle.Frontal,
+                imageResolution: imageResolution || CameraResolution.Hyperdetailed,
+                additionalDetails,
+                outputFormat,
+                audioType: audioType || AudioType.Music,
+                audioVibe: audioVibe || AudioVibe.Atmospheric,
+                codeLanguage,
+                codeTask,
+                imageModel,
+                videoModel,
+                videoDuration,
+                wordCount
             };
 
             const historyItem: PromptHistoryItem = {
@@ -263,7 +273,7 @@ const App = () => {
         userPrompt, promptMode, contentTone, pov, videoResolution, imageStyle, 
         lighting, framing, cameraAngle, imageResolution, aspectRatio, additionalDetails,
         outputFormat, audioType, audioVibe, codeLanguage, codeTask, outputStructure,
-        imageModel, videoModel
+        imageModel, videoModel, videoDuration, wordCount
     ]);
 
     const handleCopyToClipboard = useCallback(() => {
@@ -284,24 +294,30 @@ const App = () => {
         return 'Enhance Prompt';
     }, [isLoading]);
 
-    const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {label: string, value: string}[] | string[]) => (
-        <div>
-            <label htmlFor={id} className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">{label}</label>
-            <select
-                id={id}
-                className="w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-                value={value}
-                onChange={onChange}
-                aria-label={`Select ${label}`}
-            >
-                {options.map(option => (
-                    typeof option === 'string' 
-                        ? <option key={option} value={option}>{option}</option>
-                        : <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-            </select>
-        </div>
-    );
+    const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {label: string, value: string}[] | string[], includeDefault = true) => {
+        const allOptions = includeDefault
+            ? [{ label: 'Default', value: '' }, ...options]
+            : options;
+
+        return (
+            <div>
+                <label htmlFor={id} className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">{label}</label>
+                <select
+                    id={id}
+                    className="w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                    value={value}
+                    onChange={onChange}
+                    aria-label={`Select ${label}`}
+                >
+                    {allOptions.map(option => (
+                        typeof option === 'string'
+                            ? <option key={option} value={option}>{option}</option>
+                            : <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </select>
+            </div>
+        );
+    };
 
     const modeOptions = [
         { mode: PromptMode.Text, icon: 'fa-file-alt' },
@@ -335,9 +351,10 @@ const App = () => {
             case PromptMode.Text:
                 return (
                      <div className="space-y-4">
-                        {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
+                        {renderSelect("wordCount", "Word Count", wordCount, (e) => setWordCount(e.target.value), WORD_COUNT_OPTIONS, false)}
+                        {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS, false)}
                         {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
-                        {renderSelect("outputFormat", "Desired Text Format", outputFormat, (e) => setOutputFormat(e.target.value), TEXT_FORMAT_OPTIONS)}
+                        {renderSelect("outputFormat", "Desired Text Format", outputFormat, (e) => setOutputFormat(e.target.value), TEXT_FORMAT_OPTIONS, false)}
                     </div>
                 );
             case PromptMode.Image:
@@ -350,8 +367,9 @@ const App = () => {
                 return (
                     <div className="space-y-4">
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {renderSelect("imageModel", "Model", imageModel, (e) => setImageModel(e.target.value), imageModelOptions)}
-                            {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
+                            {renderSelect("imageModel", "Model", imageModel, (e) => setImageModel(e.target.value), imageModelOptions, false)}
+                            {renderSelect("wordCount", "Word Count", wordCount, (e) => setWordCount(e.target.value), WORD_COUNT_OPTIONS, false)}
+                            {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS, false)}
                          </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                            {renderSelect("contentTone", "Content Tone / Mood", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
@@ -380,21 +398,22 @@ const App = () => {
                 const videoModelOptions = Object.entries(modelSpecs['text-to-video']).map(([key, value]) => ({ label: value.name, value: key }));
                 return (
                     <div className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           {renderSelect("videoModel", "Model", videoModel, (e) => setVideoModel(e.target.value), videoModelOptions)}
-                           {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
-                        </div>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
-                            {renderSelect("pov", "Point of View", pov, (e) => setPov(e.target.value as PointOfView), POV_OPTIONS)}
-                            {renderSelect("videoResolution", "Detail Level", videoResolution, (e) => setVideoResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                           {renderSelect("videoModel", "Model", videoModel, (e) => setVideoModel(e.target.value), videoModelOptions, false)}
+                           {renderSelect("videoDuration", "Video Duration", videoDuration, (e) => setVideoDuration(e.target.value), VIDEO_DURATION_OPTIONS, false)}
+                           {renderSelect("wordCount", "Word Count", wordCount, (e) => setWordCount(e.target.value), WORD_COUNT_OPTIONS, false)}
+                           {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS, false)}
+                           {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
+                           {renderSelect("pov", "Point of View", pov, (e) => setPov(e.target.value as PointOfView), POV_OPTIONS)}
+                           {renderSelect("videoResolution", "Detail Level", videoResolution, (e) => setVideoResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
                         </div>
                     </div>
                 );
             case PromptMode.Audio:
                 return (
                      <div className="space-y-4">
-                        {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
+                        {renderSelect("wordCount", "Word Count", wordCount, (e) => setWordCount(e.target.value), WORD_COUNT_OPTIONS, false)}
+                        {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS, false)}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
                             {renderSelect("audioType", "Audio Type", audioType, (e) => setAudioType(e.target.value as AudioType), AUDIO_TYPE_OPTIONS)}
