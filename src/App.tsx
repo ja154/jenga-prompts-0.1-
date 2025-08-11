@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense, CSSProperties } from 'react';
 import { getEnhancedPrompt } from './services/geminiService';
+import { transformPrompt, validatePrompt } from './services/promptTransformer';
 import { TONE_OPTIONS, POV_OPTIONS, ASPECT_RATIO_OPTIONS, IMAGE_STYLE_OPTIONS, LIGHTING_OPTIONS, FRAMING_OPTIONS, CAMERA_ANGLE_OPTIONS, CAMERA_RESOLUTION_OPTIONS, TEXT_FORMAT_OPTIONS, AUDIO_TYPE_OPTIONS, AUDIO_VIBE_OPTIONS, CODE_LANGUAGE_OPTIONS, CODE_TASK_OPTIONS, OUTPUT_STRUCTURE_OPTIONS } from './constants';
 import { ContentTone, PointOfView, PromptMode, AspectRatio, ImageStyle, Lighting, Framing, CameraAngle, CameraResolution, AudioType, AudioVibe, CodeLanguage, CodeTask, OutputStructure, PromptHistoryItem, PromptHistoryItemOptions } from './types';
 import { PromptTemplate } from './templates';
 import SuspenseLoader from './components/SuspenseLoader';
+import modelSpecs from './model-specs.json';
 
 const PromptLibrary = React.lazy(() => import('./components/PromptLibrary'));
 
@@ -44,6 +46,7 @@ const App = () => {
     const [error, setError] = useState('');
     const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
     const [promptHistory, setPromptHistory] = useState<PromptHistoryItem[]>([]);
+    const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
 
     const inputSectionRef = useRef<HTMLElement>(null);
 
@@ -54,9 +57,11 @@ const App = () => {
     // Video state
     const [pov, setPov] = useState<PointOfView>(PointOfView.ThirdPerson);
     const [videoResolution, setVideoResolution] = useState<CameraResolution>(CameraResolution.FourK);
+    const [videoModel, setVideoModel] = useState<string>(Object.keys(modelSpecs['text-to-video'])[0]);
 
     // Image state
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.Landscape);
+    const [imageModel, setImageModel] = useState<string>(Object.keys(modelSpecs['text-to-image'])[0]);
     const [imageStyle, setImageStyle] = useState<ImageStyle>(ImageStyle.Cinematic);
     const [lighting, setLighting] = useState<Lighting>(Lighting.GoldenHour);
     const [framing, setFraming] = useState<Framing>(Framing.MediumShot);
@@ -74,6 +79,16 @@ const App = () => {
     // Code state
     const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>(CodeLanguage.JavaScript);
     const [codeTask, setCodeTask] = useState<CodeTask>(CodeTask.Generate);
+
+    useEffect(() => {
+        if (promptMode === PromptMode.Image || promptMode === PromptMode.Video) {
+            const modelKey = promptMode === PromptMode.Image ? imageModel : videoModel;
+            const { warnings } = validatePrompt(userPrompt, modelKey, promptMode);
+            setValidationWarnings(warnings);
+        } else {
+            setValidationWarnings([]);
+        }
+    }, [userPrompt, imageModel, videoModel, promptMode]);
 
     useEffect(() => {
         try {
@@ -183,16 +198,38 @@ const App = () => {
         setLoadingMessage(loadingMsg);
         
         try {
-            const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options });
-            console.log('API Result:', result);
-            setPrimaryResult(result.prompt);
-            setJsonResult(JSON.stringify(result, null, 2));
+            let resultPrompt: string;
+            let resultJson: string;
+
+            if (promptMode === PromptMode.Image || promptMode === PromptMode.Video) {
+                loadingMsg = 'Adapting prompt for the selected model...';
+                setLoadingMessage(loadingMsg);
+
+                const modelKey = promptMode === PromptMode.Image ? imageModel : videoModel;
+                const transformed = transformPrompt({ userPrompt, mode: promptMode, modelKey, options });
+
+                resultPrompt = transformed.prompt;
+                resultJson = JSON.stringify(transformed, null, 2);
+
+                setPrimaryResult(resultPrompt);
+                setJsonResult(resultJson);
+
+            } else {
+                const result = await getEnhancedPrompt({ userPrompt, mode: promptMode, options });
+                console.log('API Result:', result);
+                resultPrompt = result.prompt;
+                resultJson = JSON.stringify(result, null, 2);
+
+                setPrimaryResult(resultPrompt);
+                setJsonResult(resultJson);
+            }
 
             const currentOptions: PromptHistoryItemOptions = {
                 contentTone, outputStructure, pov, videoResolution, aspectRatio,
                 imageStyle, lighting, framing, cameraAngle, imageResolution,
                 additionalDetails, outputFormat, audioType, audioVibe,
-                codeLanguage, codeTask
+                codeLanguage, codeTask,
+                imageModel, videoModel
             };
 
             const historyItem: PromptHistoryItem = {
@@ -200,8 +237,8 @@ const App = () => {
                 timestamp: Date.now(),
                 mode: promptMode,
                 userPrompt,
-                primaryResult: result.prompt,
-                jsonResult: JSON.stringify(result, null, 2),
+                primaryResult: resultPrompt,
+                jsonResult: resultJson,
                 options: currentOptions,
             };
 
@@ -225,7 +262,8 @@ const App = () => {
     }, [
         userPrompt, promptMode, contentTone, pov, videoResolution, imageStyle, 
         lighting, framing, cameraAngle, imageResolution, aspectRatio, additionalDetails,
-        outputFormat, audioType, audioVibe, codeLanguage, codeTask, outputStructure
+        outputFormat, audioType, audioVibe, codeLanguage, codeTask, outputStructure,
+        imageModel, videoModel
     ]);
 
     const handleCopyToClipboard = useCallback(() => {
@@ -303,15 +341,22 @@ const App = () => {
                     </div>
                 );
             case PromptMode.Image:
+                const imageModelOptions = Object.entries(modelSpecs['text-to-image']).map(([key, value]) => ({ label: value.name, value: key }));
+                const currentImageModelSpec = (modelSpecs['text-to-image'] as any)[imageModel];
+                const availableAspectRatios = currentImageModelSpec.aspect_ratios.includes('any')
+                    ? ASPECT_RATIO_OPTIONS
+                    : ASPECT_RATIO_OPTIONS.filter(opt => currentImageModelSpec.aspect_ratios.includes(opt.value));
+
                 return (
                     <div className="space-y-4">
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {renderSelect("imageModel", "Model", imageModel, (e) => setImageModel(e.target.value), imageModelOptions)}
                             {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
                          </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                            {renderSelect("contentTone", "Content Tone / Mood", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
                            {renderSelect("imageStyle", "Style", imageStyle, (e) => setImageStyle(e.target.value as ImageStyle), IMAGE_STYLE_OPTIONS)}
-                           {renderSelect("aspectRatio", "Aspect Ratio", aspectRatio, (e) => setAspectRatio(e.target.value as AspectRatio), ASPECT_RATIO_OPTIONS)}
+                           {renderSelect("aspectRatio", "Aspect Ratio", aspectRatio, (e) => setAspectRatio(e.target.value as AspectRatio), availableAspectRatios)}
                            {renderSelect("lighting", "Lighting", lighting, (e) => setLighting(e.target.value as Lighting), LIGHTING_OPTIONS)}
                            {renderSelect("framing", "Framing", framing, (e) => setFraming(e.target.value as Framing), FRAMING_OPTIONS)}
                            {renderSelect("cameraAngle", "Camera Angle", cameraAngle, (e) => setCameraAngle(e.target.value as CameraAngle), CAMERA_ANGLE_OPTIONS)}
@@ -332,13 +377,15 @@ const App = () => {
                     </div>
                 );
             case PromptMode.Video:
+                const videoModelOptions = Object.entries(modelSpecs['text-to-video']).map(([key, value]) => ({ label: value.name, value: key }));
                 return (
                     <div className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           {renderSelect("videoModel", "Model", videoModel, (e) => setVideoModel(e.target.value), videoModelOptions)}
                            {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
-                           {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
                         </div>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
                             {renderSelect("pov", "Point of View", pov, (e) => setPov(e.target.value as PointOfView), POV_OPTIONS)}
                             {renderSelect("videoResolution", "Detail Level", videoResolution, (e) => setVideoResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
                         </div>
@@ -390,7 +437,7 @@ const App = () => {
 
                 <PromptModeSelector />
 
-                <div className="mb-4">
+                <div className="mb-4 relative">
                     <label htmlFor="userPrompt" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Your Core Idea or Concept</label>
                     <textarea
                         id="userPrompt"
@@ -400,9 +447,16 @@ const App = () => {
                         onChange={(e) => setUserPrompt(e.target.value)}
                         aria-label="Describe your core concept"
                     ></textarea>
+                    {validationWarnings.length > 0 && (
+                        <div className="absolute -bottom-1 translate-y-full left-0 w-full text-xs text-amber-600 dark:text-amber-400 pt-1 space-y-1">
+                            {validationWarnings.map((warning, i) => (
+                                <p key={i}><i className="fas fa-exclamation-triangle mr-1.5"></i>{warning}</p>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-6 pt-4">
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Step 2: Add Modifiers</label>
                     <div className="p-4 bg-slate-200/50 dark:bg-gray-900/40 rounded-xl">
                         {renderModeOptions()}

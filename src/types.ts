@@ -137,7 +137,9 @@ export interface PromptHistoryItemOptions {
     outputStructure: OutputStructure;
     pov: PointOfView;
     videoResolution: CameraResolution;
+    videoModel?: string;
     aspectRatio: AspectRatio;
+    imageModel?: string;
     imageStyle: ImageStyle;
     lighting: Lighting;
     framing: Framing;
