@@ -15,7 +15,7 @@
       "description": "Provides a detailed, mode-specific instruction set. The system dynamically selects one of these blocks based on user choice and injects the selected parameters.",
       "modalities": {
         "Image": {
-          "goal": "Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases, rich in technical and artistic terms.",
+          "goal": "You are an expert art director and image prompt engineer. Your task is to transform a user's core idea into a structured JSON object. You must follow the VICES method as your guide. **Your Final Task:** Based on the user's core idea, you will generate a JSON object that fills out the VICES REPLICATION TEMPLATE. The values for each key should be detailed, descriptive strings that an AI image generator could understand. Do not add any keys not present in the template. Your output MUST be ONLY the raw JSON object. Do not include markdown `json` tags or any other explanatory text.\n\n**REPLICATION TEMPLATE:**\n```json\n{\n  \"visual_hierarchy\": {\n    \"primary_focus\": {},\n    \"secondary_elements\": {},\n    \"attention_flow\": {}\n  },\n  \"intent_context\": {\n    \"purpose\": {},\n    \"audience\": {},\n    \"cultural_factors\": {}\n  },\n  \"composition_specs\": {\n    \"layout\": {},\n    \"color_system\": {},\n    \"technical_requirements\": {}\n  },\n  \"emotional_aesthetic\": {\n    \"mood_direction\": {},\n    \"style_framework\": {},\n    \"brand_alignment\": {}\n  },\n  \"production_bridge\": {\n    \"content_needs\": {},\n    \"logistics\": {},\n    \"post_production\": {}\n  }\n}\n```",
           "directives_template": {
             "Style": "{{imageStyle}}",
             "Tone & Mood": "{{contentTone}}",
@@ -26,28 +26,21 @@
             "Aspect Ratio": "{{aspectRatio}}",
             "Additional Details": "\"{{additionalDetails}}\""
           },
-          "key_requirements": [
-            "Use descriptive keywords, not full sentences.",
-            "Incorporate professional terminology from photography and art."
-          ],
-          "output_format_instruction": "A single, comma-separated string of keywords. No preamble, explanation, or markdown."
+          "key_requirements": [],
+          "output_format_instruction": "A raw JSON object."
         },
         "Video": {
-          "goal": "Write a 'master prompt' as a single, dense paragraph (150-250 words) that functions as a detailed screenplay shot description for an 8-second video.",
+          "goal": "You are an expert video producer and prompt engineer. Your task is to transform a user's core idea into a structured JSON object. You must follow the PAVCI method as your guide. **Your Final Task:** Based on the user's core idea, you will generate a JSON object that fills out the PAVCI REPLICATION TEMPLATE. The values for each key should be detailed, descriptive strings that would guide a video production. Do not add any keys not present in the template. Your output MUST be ONLY the raw JSON object. Do not include markdown `json` tags or any other explanatory text.\n\n**REPLICATION TEMPLATE:**\n```json\n{\n  \"project_foundation\": {\n    \"identity\": {},\n    \"vision\": {},\n    \"constraints\": {}\n  },\n  \"audience_objectives\": {\n    \"primary_audience\": {},\n    \"stakeholders\": {},\n    \"success_metrics\": {}\n  },\n  \"visual_system\": {\n    \"identity\": {},\n    \"production_design\": {},\n    \"technical_specs\": {}\n  },\n  \"content_structure\": {\n    \"narrative\": {},\n    \"timing\": {},\n    \"elements\": {}\n  },\n  \"implementation_bridge\": {\n    \"pre_production\": {},\n    \"production\": {},\n    \"post_production\": {}\n  }\n}\n```",
           "directives_template": {
             "Content Tone": "{{contentTone}}",
             "Point of View": "{{pov}}",
             "Quality": "{{resolution}}"
           },
-          "key_requirements": [
-            "Establish a narrative arc (beginning, middle, end).",
-            "Be visually explicit about subjects, actions, environment, and cinematography.",
-            "Define the atmosphere with powerful adjectives."
-          ],
-          "output_format_instruction": "A single paragraph starting directly with the description. No introductory text or markdown."
+          "key_requirements": [],
+          "output_format_instruction": "A raw JSON object."
         },
         "Text": {
-          "goal": "Refine the user's prompt to be more specific, structured, and effective for an LLM.",
+          "goal": "Refine the user's prompt to be more specific, structured, and effective for an LLM. The final output should be approximately {{wordCount}} words.",
           "directives_template": {
             "Tone": "{{contentTone}}",
             "Desired Output Format": "{{outputFormat}}"
@@ -58,7 +51,7 @@
           "output_format_instruction": "The complete, enhanced text prompt, ready to be used."
         },
         "Audio": {
-          "goal": "Create a rich, descriptive prompt for generating audio (music, speech, or sound effects).",
+          "goal": "Create a rich, descriptive prompt for generating audio (music, speech, or sound effects). The description should be approximately {{wordCount}} words.",
           "directives_template": {
             "Audio Type": "{{audioType}}",
             "Vibe / Mood": "{{audioVibe}}",

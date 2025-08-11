@@ -151,6 +151,8 @@ export interface PromptHistoryItemOptions {
     audioVibe: AudioVibe;
     codeLanguage: CodeLanguage;
     codeTask: CodeTask;
+    videoDuration?: string;
+    wordCount?: string;
 }
 
 export interface PromptHistoryItem {

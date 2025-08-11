@@ -2,66 +2,45 @@
   "text-to-video": {
     "sora": {
       "name": "Sora",
-      "max_duration": 120,
-      "min_duration": 3,
-      "resolution": ["1920x1080", "1024x1792", "1792x1024"],
-      "default_resolution": "1920x1080",
-      "token_limit": 480,
-      "constraints": ["no_celebrity_faces", "no_trademarked_content"],
-      "motion_parameters": {
-        "max_camera_movements": 3,
-        "supported_transitions": ["zoom", "pan", "cut"],
-        "physics_simulation": true
-      },
-      "prompt_template": "SUBJECT performing ACTION with ENVIRONMENT DETAILS in STYLE. Camera: CAMERA_MOVEMENT. Motion: MOTION_DESCRIPTION."
+      "max_duration": 120
     },
     "veo_3": {
       "name": "Veo 3",
-      "max_duration": 8,
-      "resolution": ["1080p"],
-      "default_resolution": "1080p",
-      "token_limit": 180,
-      "special_features": ["watermark_removal"],
-      "required_boilerplate": "Cinematic style, 35mm film grain, shallow depth of field",
-      "prompt_structure": "[Subject] [Action] [Environment] [Style]"
+      "max_duration": 8
     },
     "pika": {
       "name": "Pika",
-      "max_duration": 10,
-      "resolution": ["1024x576"],
-      "default_resolution": "1024x576",
-      "token_limit": 300,
-      "style_requirements": "Must include art style reference (e.g., anime, pixar, photorealistic)",
-      "negative_prompt_required": true
+      "max_duration": 10
+    },
+    "runway_gen3": {
+      "name": "Runway Gen-3",
+      "max_duration": 16
+    },
+    "kling": {
+      "name": "Kling",
+      "max_duration": 120
     }
   },
   "text-to-image": {
     "dalle_3": {
       "name": "DALL-E 3",
-      "aspect_ratios": ["1:1", "16:9", "9:16", "4:3", "3:2"],
-      "default_aspect_ratio": "1:1",
-      "token_limit": 400,
-      "automatic_prompt_enhancement": true,
-      "text_rendering_support": "high",
-      "safety_filters": "strict"
+      "aspect_ratios": ["1:1", "16:9", "9:16", "4:3", "3:2"]
     },
     "midjourney_v7": {
       "name": "Midjourney v7",
-      "aspect_ratios": ["1:1", "2:3", "3:2"],
-      "default_aspect_ratio": "1:1",
-      "token_limit": 250,
-      "required_parameters": ["--style raw", "--v 7.0"],
-      "style_keywords": ["photographic", "illustration", "cinematic"],
-      "prompt_format": "IMAGINE [scene description] :: [style parameters]"
+      "aspect_ratios": ["1:1", "2:3", "3:2"]
     },
     "sd_xl_turbo": {
       "name": "SDXL Turbo",
-      "aspect_ratios": ["any"],
-      "default_aspect_ratio": "1:1",
-      "token_limit": 150,
-      "negative_prompt_required": true,
-      "recommended_boosters": ["masterpiece", "ultra-detailed", "8k"],
-      "lora_support": true
+      "aspect_ratios": ["any"]
+    },
+    "ideogram_1": {
+      "name": "Ideogram 1.0",
+      "aspect_ratios": ["1:1", "16:9", "10:16"]
+    },
+    "amazon_titan": {
+      "name": "Amazon Titan G1",
+      "aspect_ratios": ["1:1", "16:9", "9:16"]
     }
   }
 }
