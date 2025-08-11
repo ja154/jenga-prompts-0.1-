@@ -370,16 +370,14 @@ const App = () => {
                 const videoModelOptions = Object.entries(modelSpecs['text-to-video']).map(([key, value]) => ({ label: value.name, value: key }));
                 return (
                     <div className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                            {renderSelect("videoModel", "Model", videoModel, (e) => setVideoModel(e.target.value), videoModelOptions)}
                            {renderSelect("videoDuration", "Video Duration", videoDuration, (e) => setVideoDuration(e.target.value), VIDEO_DURATION_OPTIONS)}
                            {renderSelect("wordCount", "Word Count", wordCount, (e) => setWordCount(e.target.value), WORD_COUNT_OPTIONS)}
                            {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
-                        </div>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
-                            {renderSelect("pov", "Point of View", pov, (e) => setPov(e.target.value as PointOfView), POV_OPTIONS)}
-                            {renderSelect("videoResolution", "Detail Level", videoResolution, (e) => setVideoResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
+                           {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
+                           {renderSelect("pov", "Point of View", pov, (e) => setPov(e.target.value as PointOfView), POV_OPTIONS)}
+                           {renderSelect("videoResolution", "Detail Level", videoResolution, (e) => setVideoResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
                         </div>
                     </div>
                 );
