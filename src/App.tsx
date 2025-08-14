@@ -2,9 +2,8 @@ import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense, CSS
 import { getEnhancedPrompt } from './services/geminiService';
 import { transformPrompt, validatePrompt } from './services/promptTransformer';
 import { TONE_OPTIONS, POV_OPTIONS, ASPECT_RATIO_OPTIONS, IMAGE_STYLE_OPTIONS, LIGHTING_OPTIONS, FRAMING_OPTIONS, CAMERA_ANGLE_OPTIONS, CAMERA_RESOLUTION_OPTIONS, TEXT_FORMAT_OPTIONS, AUDIO_TYPE_OPTIONS, AUDIO_VIBE_OPTIONS, CODE_LANGUAGE_OPTIONS, CODE_TASK_OPTIONS, OUTPUT_STRUCTURE_OPTIONS, VIDEO_DURATION_OPTIONS, WORD_COUNT_OPTIONS } from './constants';
-import { ContentTone, PointOfView, PromptMode, AspectRatio, ImageStyle, Lighting, Framing, CameraAngle, CameraResolution, AudioType, AudioVibe, CodeLanguage, CodeTask, OutputStructure, PromptHistoryItem, PromptHistoryItemOptions, ModifierPreset } from './types';
+import { ContentTone, PointOfView, PromptMode, AspectRatio, ImageStyle, Lighting, Framing, CameraAngle, CameraResolution, AudioType, AudioVibe, CodeLanguage, CodeTask, OutputStructure, PromptHistoryItem, PromptHistoryItemOptions } from './types';
 import { PromptTemplate } from './templates';
-import { IMAGE_PRESETS, VIDEO_PRESETS, PRESET_GENERAL_PURPOSE } from './presets';
 import SuspenseLoader from './components/SuspenseLoader';
 import modelSpecs from './model-specs.json';
 
@@ -52,49 +51,25 @@ const App = () => {
     const inputSectionRef = useRef<HTMLElement>(null);
 
     // Shared state
-    const [contentTone, setContentTone] = useState<ContentTone>(PRESET_GENERAL_PURPOSE.values.contentTone!);
+    const [contentTone, setContentTone] = useState<ContentTone>(ContentTone.Default);
     const [outputStructure, setOutputStructure] = useState<OutputStructure>(OutputStructure.Paragraph);
     
     // Video state
-    const [pov, setPov] = useState<PointOfView>(PRESET_GENERAL_PURPOSE.values.pov!);
-    const [videoResolution, setVideoResolution] = useState<CameraResolution>(PRESET_GENERAL_PURPOSE.values.resolution!);
+    const [pov, setPov] = useState<PointOfView>(PointOfView.Default);
+    const [videoResolution, setVideoResolution] = useState<CameraResolution>(CameraResolution.Default);
     const [videoModel, setVideoModel] = useState<string>(Object.keys(modelSpecs['text-to-video'])[0]);
     const [videoDuration, setVideoDuration] = useState<string>('15');
     const [wordCount, setWordCount] = useState<string>('250');
 
     // Image state
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(PRESET_GENERAL_PURPOSE.values.aspectRatio!);
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.Default);
     const [imageModel, setImageModel] = useState<string>(Object.keys(modelSpecs['text-to-image'])[0]);
-    const [imageStyle, setImageStyle] = useState<ImageStyle>(PRESET_GENERAL_PURPOSE.values.imageStyle!);
-    const [lighting, setLighting] = useState<Lighting>(PRESET_GENERAL_PURPOSE.values.lighting!);
-    const [framing, setFraming] = useState<Framing>(PRESET_GENERAL_PURPOSE.values.framing!);
-    const [cameraAngle, setCameraAngle] = useState<CameraAngle>(PRESET_GENERAL_PURPOSE.values.cameraAngle!);
-    const [imageResolution, setImageResolution] = useState<CameraResolution>(PRESET_GENERAL_PURPOSE.values.resolution!);
+    const [imageStyle, setImageStyle] = useState<ImageStyle>(ImageStyle.Default);
+    const [lighting, setLighting] = useState<Lighting>(Lighting.Default);
+    const [framing, setFraming] = useState<Framing>(Framing.Default);
+    const [cameraAngle, setCameraAngle] = useState<CameraAngle>(CameraAngle.Default);
+    const [imageResolution, setImageResolution] = useState<CameraResolution>(CameraResolution.Default);
     const [additionalDetails, setAdditionalDetails] = useState('');
-    const [selectedPreset, setSelectedPreset] = useState<string>(PRESET_GENERAL_PURPOSE.name);
-
-    const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const presetName = e.target.value;
-        setSelectedPreset(presetName);
-
-        const presets = promptMode === PromptMode.Image ? IMAGE_PRESETS : VIDEO_PRESETS;
-        const preset = presets.find(p => p.name === presetName);
-
-        if (preset) {
-            const { values } = preset;
-            if (values.imageStyle) setImageStyle(values.imageStyle);
-            if (values.lighting) setLighting(values.lighting);
-            if (values.framing) setFraming(values.framing);
-            if (values.cameraAngle) setCameraAngle(values.cameraAngle);
-            if (values.resolution) {
-                setImageResolution(values.resolution);
-                setVideoResolution(values.resolution);
-            }
-            if (values.aspectRatio) setAspectRatio(values.aspectRatio);
-            if (values.contentTone) setContentTone(values.contentTone);
-            if (values.pov) setPov(values.pov);
-        }
-    };
 
     // Text state
     const [outputFormat, setOutputFormat] = useState('Plain Text');
@@ -199,14 +174,36 @@ const App = () => {
         let options: Record<string, any> = {};
         let loadingMsg = 'Our AI is enhancing your prompt...';
 
+        const finalContentTone = contentTone === ContentTone.Default ? ContentTone.Neutral : contentTone;
+
         switch (promptMode) {
             case PromptMode.Video:
                 loadingMsg = 'Crafting your cinematic video prompt...';
-                options = { contentTone, pov, resolution: videoResolution, outputStructure, videoDuration, wordCount, videoModel };
+                options = {
+                    contentTone: finalContentTone,
+                    pov: pov === PointOfView.Default ? PointOfView.ThirdPerson : pov,
+                    resolution: videoResolution === CameraResolution.Default ? CameraResolution.FourK : videoResolution,
+                    outputStructure,
+                    videoDuration,
+                    wordCount,
+                    videoModel
+                };
                 break;
             case PromptMode.Image:
                 loadingMsg = 'Engineering your visual prompt...';
-                options = { contentTone, imageStyle, lighting, framing, cameraAngle, resolution: imageResolution, aspectRatio, additionalDetails, outputStructure, wordCount, imageModel };
+                options = {
+                    contentTone: finalContentTone,
+                    imageStyle: imageStyle === ImageStyle.Default ? ImageStyle.Cinematic : imageStyle,
+                    lighting: lighting === Lighting.Default ? Lighting.GoldenHour : lighting,
+                    framing: framing === Framing.Default ? Framing.MediumShot : framing,
+                    cameraAngle: cameraAngle === CameraAngle.Default ? CameraAngle.Frontal : cameraAngle,
+                    resolution: imageResolution === CameraResolution.Default ? CameraResolution.Hyperdetailed : imageResolution,
+                    aspectRatio: aspectRatio === AspectRatio.Default ? AspectRatio.Landscape : aspectRatio,
+                    additionalDetails,
+                    outputStructure,
+                    wordCount,
+                    imageModel
+                };
                 break;
             case PromptMode.Text:
                 loadingMsg = 'Refining your text prompt...';
@@ -360,26 +357,22 @@ const App = () => {
                 const availableAspectRatios = currentImageModelSpec.aspect_ratios.includes('any')
                     ? ASPECT_RATIO_OPTIONS
                     : ASPECT_RATIO_OPTIONS.filter(opt => currentImageModelSpec.aspect_ratios.includes(opt.value));
-                const presetOptions = IMAGE_PRESETS.map(p => ({ label: p.name, value: p.name }));
 
                 return (
                     <div className="space-y-4">
-                        <div className="border-b border-slate-300 dark:border-gray-700 pb-4 mb-4">
-                            {renderSelect("presetSelector", "Modifier Preset", selectedPreset, handlePresetChange, presetOptions)}
-                        </div>
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {renderSelect("imageModel", "Model", imageModel, (e) => setImageModel(e.target.value), imageModelOptions)}
                             {renderSelect("wordCount", "Word Count", wordCount, (e) => setWordCount(e.target.value), WORD_COUNT_OPTIONS)}
                             {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
                          </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                           {renderSelect("contentTone", "Content Tone / Mood", contentTone, (e) => { setContentTone(e.target.value as ContentTone); setSelectedPreset('None'); }, TONE_OPTIONS)}
-                           {renderSelect("imageStyle", "Style", imageStyle, (e) => { setImageStyle(e.target.value as ImageStyle); setSelectedPreset('None'); }, IMAGE_STYLE_OPTIONS)}
-                           {renderSelect("aspectRatio", "Aspect Ratio", aspectRatio, (e) => { setAspectRatio(e.target.value as AspectRatio); setSelectedPreset('None'); }, availableAspectRatios)}
-                           {renderSelect("lighting", "Lighting", lighting, (e) => { setLighting(e.target.value as Lighting); setSelectedPreset('None'); }, LIGHTING_OPTIONS)}
-                           {renderSelect("framing", "Framing", framing, (e) => { setFraming(e.target.value as Framing); setSelectedPreset('None'); }, FRAMING_OPTIONS)}
-                           {renderSelect("cameraAngle", "Camera Angle", cameraAngle, (e) => { setCameraAngle(e.target.value as CameraAngle); setSelectedPreset('None'); }, CAMERA_ANGLE_OPTIONS)}
-                           {renderSelect("imageResolution", "Detail Level", imageResolution, (e) => { setImageResolution(e.target.value as CameraResolution); setSelectedPreset('None'); }, CAMERA_RESOLUTION_OPTIONS)}
+                           {renderSelect("contentTone", "Content Tone / Mood", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
+                           {renderSelect("imageStyle", "Style", imageStyle, (e) => setImageStyle(e.target.value as ImageStyle), IMAGE_STYLE_OPTIONS)}
+                           {renderSelect("aspectRatio", "Aspect Ratio", aspectRatio, (e) => setAspectRatio(e.target.value as AspectRatio), availableAspectRatios)}
+                           {renderSelect("lighting", "Lighting", lighting, (e) => setLighting(e.target.value as Lighting), LIGHTING_OPTIONS)}
+                           {renderSelect("framing", "Framing", framing, (e) => setFraming(e.target.value as Framing), FRAMING_OPTIONS)}
+                           {renderSelect("cameraAngle", "Camera Angle", cameraAngle, (e) => setCameraAngle(e.target.value as CameraAngle), CAMERA_ANGLE_OPTIONS)}
+                           {renderSelect("imageResolution", "Detail Level", imageResolution, (e) => setImageResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
                         </div>
                         <div>
                              <label htmlFor="additionalDetails" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Additional Details (Optional)</label>
@@ -397,20 +390,16 @@ const App = () => {
                 );
             case PromptMode.Video:
                 const videoModelOptions = Object.entries(modelSpecs['text-to-video']).map(([key, value]) => ({ label: value.name, value: key }));
-                const videoPresetOptions = VIDEO_PRESETS.map(p => ({ label: p.name, value: p.name }));
                 return (
                     <div className="space-y-4">
-                        <div className="border-b border-slate-300 dark:border-gray-700 pb-4 mb-4">
-                            {renderSelect("presetSelector", "Modifier Preset", selectedPreset, handlePresetChange, videoPresetOptions)}
-                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                            {renderSelect("videoModel", "Model", videoModel, (e) => setVideoModel(e.target.value), videoModelOptions)}
                            {renderSelect("videoDuration", "Video Duration", videoDuration, (e) => setVideoDuration(e.target.value), VIDEO_DURATION_OPTIONS)}
                            {renderSelect("wordCount", "Word Count", wordCount, (e) => setWordCount(e.target.value), WORD_COUNT_OPTIONS)}
                            {renderSelect("outputStructure", "Output Format", outputStructure, (e) => setOutputStructure(e.target.value as OutputStructure), OUTPUT_STRUCTURE_OPTIONS)}
-                           {renderSelect("contentTone", "Content Tone", contentTone, (e) => { setContentTone(e.target.value as ContentTone); setSelectedPreset('None'); }, TONE_OPTIONS)}
-                           {renderSelect("pov", "Point of View", pov, (e) => { setPov(e.target.value as PointOfView); setSelectedPreset('None'); }, POV_OPTIONS)}
-                           {renderSelect("videoResolution", "Detail Level", videoResolution, (e) => { setVideoResolution(e.target.value as CameraResolution); setSelectedPreset('None'); }, CAMERA_RESOLUTION_OPTIONS)}
+                           {renderSelect("contentTone", "Content Tone", contentTone, (e) => setContentTone(e.target.value as ContentTone), TONE_OPTIONS)}
+                           {renderSelect("pov", "Point of View", pov, (e) => setPov(e.target.value as PointOfView), POV_OPTIONS)}
+                           {renderSelect("videoResolution", "Detail Level", videoResolution, (e) => setVideoResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
                         </div>
                     </div>
                 );
