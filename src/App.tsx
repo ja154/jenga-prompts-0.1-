@@ -30,6 +30,23 @@ const ThemeToggle = ({ theme, toggleTheme }: { theme: string; toggleTheme: () =>
     </div>
 );
 
+const GENERAL_PURPOSE_PRESET = {
+    // Photo Defaults
+    imageStyle: ImageStyle.DigitalArt,
+    lighting: Lighting.NaturalLight,
+    framing: Framing.Centered,
+    cameraAngle: CameraAngle.Frontal,
+    imageResolution: CameraResolution.Standard,
+    aspectRatio: AspectRatio.Square,
+
+    // Video Defaults
+    pov: PointOfView.StaticShot,
+    videoResolution: CameraResolution.HD,
+
+    // Shared Defaults
+    contentTone: ContentTone.Neutral,
+};
+
 const App = () => {
     const [theme, setTheme] = useState(() => {
         const storedTheme = localStorage.getItem('theme');
@@ -51,24 +68,24 @@ const App = () => {
     const inputSectionRef = useRef<HTMLElement>(null);
 
     // Shared state
-    const [contentTone, setContentTone] = useState<ContentTone>(ContentTone.Neutral);
+    const [contentTone, setContentTone] = useState<ContentTone>(GENERAL_PURPOSE_PRESET.contentTone);
     const [outputStructure, setOutputStructure] = useState<OutputStructure>(OutputStructure.Paragraph);
     
     // Video state
-    const [pov, setPov] = useState<PointOfView>(PointOfView.ThirdPerson);
-    const [videoResolution, setVideoResolution] = useState<CameraResolution>(CameraResolution.FourK);
+    const [pov, setPov] = useState<PointOfView>(GENERAL_PURPOSE_PRESET.pov);
+    const [videoResolution, setVideoResolution] = useState<CameraResolution>(GENERAL_PURPOSE_PRESET.videoResolution);
     const [videoModel, setVideoModel] = useState<string>(Object.keys(modelSpecs['text-to-video'])[0]);
     const [videoDuration, setVideoDuration] = useState<string>('15');
     const [wordCount, setWordCount] = useState<string>('250');
 
     // Image state
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.Landscape);
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(GENERAL_PURPOSE_PRESET.aspectRatio);
     const [imageModel, setImageModel] = useState<string>(Object.keys(modelSpecs['text-to-image'])[0]);
-    const [imageStyle, setImageStyle] = useState<ImageStyle>(ImageStyle.Cinematic);
-    const [lighting, setLighting] = useState<Lighting>(Lighting.GoldenHour);
-    const [framing, setFraming] = useState<Framing>(Framing.MediumShot);
-    const [cameraAngle, setCameraAngle] = useState<CameraAngle>(CameraAngle.Frontal);
-    const [imageResolution, setImageResolution] = useState<CameraResolution>(CameraResolution.Hyperdetailed);
+    const [imageStyle, setImageStyle] = useState<ImageStyle>(GENERAL_PURPOSE_PRESET.imageStyle);
+    const [lighting, setLighting] = useState<Lighting>(GENERAL_PURPOSE_PRESET.lighting);
+    const [framing, setFraming] = useState<Framing>(GENERAL_PURPOSE_PRESET.framing);
+    const [cameraAngle, setCameraAngle] = useState<CameraAngle>(GENERAL_PURPOSE_PRESET.cameraAngle);
+    const [imageResolution, setImageResolution] = useState<CameraResolution>(GENERAL_PURPOSE_PRESET.imageResolution);
     const [additionalDetails, setAdditionalDetails] = useState('');
 
     // Text state
