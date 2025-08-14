@@ -155,6 +155,20 @@ export interface PromptHistoryItemOptions {
     wordCount?: string;
 }
 
+export interface ModifierPreset {
+  name: string;
+  values: {
+    imageStyle?: ImageStyle;
+    lighting?: Lighting;
+    framing?: Framing;
+    cameraAngle?: CameraAngle;
+    contentTone?: ContentTone;
+    pov?: PointOfView;
+    resolution?: CameraResolution;
+    aspectRatio?: AspectRatio;
+  };
+}
+
 export interface PromptHistoryItem {
     id: number;
     timestamp: number;
