@@ -5,7 +5,6 @@ export const POV_OPTIONS = Object.values(PointOfView);
 export const OUTPUT_STRUCTURE_OPTIONS = Object.values(OutputStructure);
 
 export const ASPECT_RATIO_OPTIONS = [
-  { label: 'Default', value: AspectRatio.Default },
   { label: 'Square (1:1)', value: AspectRatio.Square },
   { label: 'Landscape (16:9)', value: AspectRatio.Landscape },
   { label: 'Portrait (9:16)', value: AspectRatio.Portrait },

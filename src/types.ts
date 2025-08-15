@@ -18,7 +18,6 @@ export interface EnhancedPromptResult {
 }
 
 export enum AspectRatio {
-  Default = 'Default',
   Square = '1:1',
   Landscape = '16:9',
   Portrait = '9:16',
@@ -28,7 +27,6 @@ export enum AspectRatio {
 }
 
 export enum ContentTone {
-  Default = 'Default',
   Neutral = 'Neutral',
   Humorous = 'Humorous',
   Dramatic = 'Dramatic',
@@ -42,7 +40,6 @@ export enum ContentTone {
 }
 
 export enum PointOfView {
-  Default = 'Default',
   ThirdPerson = 'Third-Person',
   FirstPerson = 'First-Person (POV)',
   Aerial = 'Aerial',
@@ -53,7 +50,6 @@ export enum PointOfView {
 }
 
 export enum ImageStyle {
-  Default = 'Default',
   Hyperrealistic = 'Hyperrealistic',
   Cinematic = 'Cinematic',
   DigitalArt = 'Digital Art',
@@ -67,7 +63,6 @@ export enum ImageStyle {
 }
 
 export enum Lighting {
-  Default = 'Default',
   HarshDirectFlash = 'Harsh Direct Flash',
   GoldenHour = 'Golden Hour',
   SoftStudio = 'Soft Studio Light',
@@ -77,7 +72,6 @@ export enum Lighting {
 }
 
 export enum Framing {
-  Default = 'Default',
   TightShot = 'Tight Shot',
   MediumShot = 'MediumShot',
   FullBodyShot = 'Full Body Shot',
@@ -88,7 +82,6 @@ export enum Framing {
 }
 
 export enum CameraAngle {
-  Default = 'Default',
   Frontal = 'Frontal',
   LowAngle = 'Slightly Low Angle',
   TopDown = 'Top-Down',
@@ -98,7 +91,6 @@ export enum CameraAngle {
 }
 
 export enum CameraResolution {
-  Default = 'Default',
   Standard = 'Standard',
   HD = 'HD',
   FourK = '4K',

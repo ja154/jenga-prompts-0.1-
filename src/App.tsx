@@ -51,24 +51,24 @@ const App = () => {
     const inputSectionRef = useRef<HTMLElement>(null);
 
     // Shared state
-    const [contentTone, setContentTone] = useState<ContentTone>(ContentTone.Default);
+    const [contentTone, setContentTone] = useState<ContentTone>(ContentTone.Neutral);
     const [outputStructure, setOutputStructure] = useState<OutputStructure>(OutputStructure.Paragraph);
     
     // Video state
-    const [pov, setPov] = useState<PointOfView>(PointOfView.Default);
-    const [videoResolution, setVideoResolution] = useState<CameraResolution>(CameraResolution.Default);
+    const [pov, setPov] = useState<PointOfView>(PointOfView.ThirdPerson);
+    const [videoResolution, setVideoResolution] = useState<CameraResolution>(CameraResolution.FourK);
     const [videoModel, setVideoModel] = useState<string>(Object.keys(modelSpecs['text-to-video'])[0]);
     const [videoDuration, setVideoDuration] = useState<string>('15');
     const [wordCount, setWordCount] = useState<string>('250');
 
     // Image state
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.Default);
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.Landscape);
     const [imageModel, setImageModel] = useState<string>(Object.keys(modelSpecs['text-to-image'])[0]);
-    const [imageStyle, setImageStyle] = useState<ImageStyle>(ImageStyle.Default);
-    const [lighting, setLighting] = useState<Lighting>(Lighting.Default);
-    const [framing, setFraming] = useState<Framing>(Framing.Default);
-    const [cameraAngle, setCameraAngle] = useState<CameraAngle>(CameraAngle.Default);
-    const [imageResolution, setImageResolution] = useState<CameraResolution>(CameraResolution.Default);
+    const [imageStyle, setImageStyle] = useState<ImageStyle>(ImageStyle.Cinematic);
+    const [lighting, setLighting] = useState<Lighting>(Lighting.GoldenHour);
+    const [framing, setFraming] = useState<Framing>(Framing.MediumShot);
+    const [cameraAngle, setCameraAngle] = useState<CameraAngle>(CameraAngle.Frontal);
+    const [imageResolution, setImageResolution] = useState<CameraResolution>(CameraResolution.Hyperdetailed);
     const [additionalDetails, setAdditionalDetails] = useState('');
 
     // Text state
@@ -174,36 +174,14 @@ const App = () => {
         let options: Record<string, any> = {};
         let loadingMsg = 'Our AI is enhancing your prompt...';
 
-        const finalContentTone = contentTone === ContentTone.Default ? ContentTone.Neutral : contentTone;
-
         switch (promptMode) {
             case PromptMode.Video:
                 loadingMsg = 'Crafting your cinematic video prompt...';
-                options = {
-                    contentTone: finalContentTone,
-                    pov: pov === PointOfView.Default ? PointOfView.ThirdPerson : pov,
-                    resolution: videoResolution === CameraResolution.Default ? CameraResolution.FourK : videoResolution,
-                    outputStructure,
-                    videoDuration,
-                    wordCount,
-                    videoModel
-                };
+                options = { contentTone, pov, resolution: videoResolution, outputStructure, videoDuration, wordCount, videoModel };
                 break;
             case PromptMode.Image:
                 loadingMsg = 'Engineering your visual prompt...';
-                options = {
-                    contentTone: finalContentTone,
-                    imageStyle: imageStyle === ImageStyle.Default ? ImageStyle.Cinematic : imageStyle,
-                    lighting: lighting === Lighting.Default ? Lighting.GoldenHour : lighting,
-                    framing: framing === Framing.Default ? Framing.MediumShot : framing,
-                    cameraAngle: cameraAngle === CameraAngle.Default ? CameraAngle.Frontal : cameraAngle,
-                    resolution: imageResolution === CameraResolution.Default ? CameraResolution.Hyperdetailed : imageResolution,
-                    aspectRatio: aspectRatio === AspectRatio.Default ? AspectRatio.Landscape : aspectRatio,
-                    additionalDetails,
-                    outputStructure,
-                    wordCount,
-                    imageModel
-                };
+                options = { contentTone, imageStyle, lighting, framing, cameraAngle, resolution: imageResolution, aspectRatio, additionalDetails, outputStructure, wordCount, imageModel };
                 break;
             case PromptMode.Text:
                 loadingMsg = 'Refining your text prompt...';
