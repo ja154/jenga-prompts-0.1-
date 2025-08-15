@@ -78,7 +78,13 @@ export default async function handler(req, res) {
         }
 
         // The response should be a JSON string, so we parse it.
-        const jsonResponse = JSON.parse(rawText.trim());
+        let jsonResponse;
+        try {
+            jsonResponse = JSON.parse(rawText.trim());
+        } catch (parseError) {
+            console.error('Failed to parse JSON response from AI:', rawText);
+            throw new Error(`AI returned invalid JSON. Response: "${rawText.substring(0, 100)}..."`);
+        }
 
         res.status(200).json(jsonResponse);
 
@@ -120,6 +126,7 @@ const buildPromptFromFramework = (mode, options, userPrompt) => {
         }
     }
     systemInstruction += "\n\n" + goal;
+    systemInstruction += "\n\nIMPORTANT: Your entire response must be a single, raw JSON object. Do not include any text, explanation, or markdown formatting before or after the JSON object.";
 
     // --- Build User Instruction ---
     let userInstruction = userInputStep.template.replace('{{userPrompt}}', userPrompt);
