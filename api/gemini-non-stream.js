@@ -82,13 +82,11 @@ export default async function handler(req, res) {
         if (isSimpleJson) {
             res.status(200).json({ prompt: enhancedPrompt });
         } else if (isDetailedJson) {
+            const relevantOptions = getRelevantOptions(mode, options);
             const jsonOutput = {
                 prompt: enhancedPrompt,
-                parameters: { mode, ...options }
+                parameters: { mode, ...relevantOptions }
             };
-            if ('additionalDetails' in jsonOutput.parameters && jsonOutput.parameters.additionalDetails === '') {
-                delete jsonOutput.parameters.additionalDetails;
-            }
             res.status(200).json(jsonOutput);
         } else {
             res.status(200).json({ prompt: enhancedPrompt });
@@ -197,4 +195,36 @@ const buildFinalPrompt = (mode, options, userPrompt) => {
             break;
     }
     return finalPrompt;
+};
+
+const getRelevantOptions = (mode, options) => {
+    const allOptions = { ...options };
+    let relevantKeys = [];
+
+    switch (mode) {
+        case 'Image':
+            relevantKeys = ['contentTone', 'imageStyle', 'lighting', 'framing', 'cameraAngle', 'resolution', 'aspectRatio', 'additionalDetails', 'imageModel'];
+            break;
+        case 'Video':
+            relevantKeys = ['contentTone', 'pov', 'resolution', 'videoModel', 'videoDuration'];
+            break;
+        case 'Text':
+            relevantKeys = ['contentTone', 'outputFormat', 'wordCount'];
+            break;
+        case 'Audio':
+            relevantKeys = ['contentTone', 'audioType', 'audioVibe', 'wordCount'];
+            break;
+        case 'Code':
+            relevantKeys = ['codeLanguage', 'codeTask'];
+            break;
+    }
+
+    const relevantOptions = {};
+    for (const key of relevantKeys) {
+        if (allOptions[key] !== undefined && allOptions[key] !== 'Default' && allOptions[key] !== '') {
+            relevantOptions[key] = allOptions[key];
+        }
+    }
+
+    return relevantOptions;
 };
