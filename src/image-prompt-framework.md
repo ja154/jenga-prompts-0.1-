@@ -260,90 +260,50 @@
 
 ---
 
-## QUALITY ASSURANCE FRAMEWORK
+## ADVANCED & MODEL-SPECIFIC TECHNIQUES
 
-### **The SHARP Test**
-- **S**pecific: Every element has a clear purpose and specification
-- **H**ierarchical: Visual importance matches message importance
-- **A**udience-aligned: Designed for intended viewers and context
-- **R**eproducible: Clear enough instructions for consistent execution
-- **P**owerful: Creates intended impact and achieves goals
+This section provides guidance on using advanced features and tailoring prompts for specific AI models.
 
-### **Multi-Context Validation**
-1. **Thumbnail Test**: Works at smallest intended viewing size
-2. **Attention Test**: Focal point clear within 2 seconds
-3. **Emotion Test**: Evokes intended feeling consistently
-4. **Platform Test**: Optimized for intended viewing context
-5. **Accessibility Test**: Inclusive and barrier-free
+### **Negative Prompts**
+- **Purpose**: To specify what you *don't* want to see in the image. This is crucial for avoiding common AI mistakes like extra limbs, ugly textures, or blurry backgrounds.
+- **Usage**: Typically uses a dedicated parameter like `--no` in Midjourney or a separate "negative prompt" field.
+- **Example**: `A beautiful forest scene --no fog, text, watermark`
 
----
+### **Prompt Weighting**
+- **Purpose**: To increase or decrease the importance of certain words or phrases in your prompt.
+- **Usage (Midjourney)**: Use `::` followed by a number (e.g., `forest::2 cat::1` makes "forest" twice as important as "cat").
+- **Usage (Other models)**: Syntax varies, but often involves parentheses `()` to increase weight and square brackets `[]` to decrease weight.
 
-## ADAPTATION GUIDE
+### **Model-Specific Adaptations**
 
-### **For Different Image Types:**
+#### **For Midjourney:**
+- **Style**: Prefers artistic, comma-separated keywords and phrases. Responds well to camera types, lens specifications, and artistic styles.
+- **Parameters**: Uses double-hyphen parameters like `--ar 16:9` (aspect ratio), `--style raw` (less opinionated style), `--stylize 150` (artistic strength).
+- **Example Structure**: `/imagine prompt: a photorealistic portrait of an old sailor, weathered face, detailed wrinkles, looking out at a stormy sea, dramatic lighting, cinematic, 8k --ar 3:2 --style raw`
 
-**Product Photography**: Emphasize technical specs and commercial conversion
-**Portrait Photography**: Focus on emotional direction and subject interaction
-**Landscape/Travel**: Highlight mood and compositional elements
-**Event Documentation**: Prioritize storytelling and authentic moments
-**Abstract/Conceptual**: Emphasize artistic vision and symbolic meaning
+#### **For DALL-E 3 (via ChatGPT):**
+- **Style**: Excels with natural language descriptions. You can write full, descriptive sentences as if you were talking to a human artist. It automatically enhances prompts.
+- **Parameters**: Less reliant on keyword parameters. You specify aspect ratio and other details in natural language (e.g., "Create a wide aspect ratio image...").
+- **Example Structure**: `Create a whimsical watercolor illustration of a fox reading a book in a cozy, cluttered library. The scene should be filled with warm, soft light from a nearby fireplace.`
 
-### **For Different Contexts:**
-
-**Print Media**: High resolution, CMYK color considerations
-**Digital Display**: RGB optimization, various screen sizes
-**Social Media**: Platform-specific ratios and engagement factors
-**Professional Presentation**: Conservative aesthetics, clear readability
-**Artistic Exhibition**: Conceptual depth and technical excellence
+#### **For Stable Diffusion:**
+- **Style**: Highly versatile. Can use keywords or natural language. Often benefits from very detailed prompts and is highly sensitive to the order of words.
+- **Parameters**: Highly customizable through various UIs (like Automatic1111). Uses a separate negative prompt field.
+- **Example Structure**: `(masterpiece, best quality), 1girl, solo, long hair, detailed dress, sitting on a throne, fantasy, intricate details, sharp focus, (cinematic lighting), by greg rutkowski.`
 
 ---
 
-## REPLICATION TEMPLATE
+## FINAL PROMPT GENERATION TASK
 
-```json
-{
-  "visual_hierarchy": {
-    "primary_focus": {},
-    "secondary_elements": {},
-    "attention_flow": {}
-  },
-  "intent_context": {
-    "purpose": {},
-    "audience": {},
-    "cultural_factors": {}
-  },
-  "composition_specs": {
-    "layout": {},
-    "color_system": {},
-    "technical_requirements": {}
-  },
-  "emotional_aesthetic": {
-    "mood_direction": {},
-    "style_framework": {},
-    "brand_alignment": {}
-  },
-  "production_bridge": {
-    "content_needs": {},
-    "logistics": {},
-    "post_production": {}
-  }
-}
-```
+**Your Role**: You are a master prompt engineer. You have absorbed the entire VICES framework above. Your task is to take a user's core idea and the provided parameters, and use the framework as your internal "thinking process" to generate a final, model-ready prompt.
 
----
+**CRITICAL INSTRUCTION**: Your final output **MUST NOT** be the JSON structure. The JSON templates are for your guidance and reasoning only. Your final output must be a clean, concise, and highly effective prompt string, tailored for a state-of-the-art AI image generator.
 
-## FRAMEWORK SUCCESS METRICS
+**Output Format**:
+- **Primary**: A dense, descriptive paragraph that reads like a professional art direction.
+- **Secondary (if appropriate)**: A comma-separated list of keywords and phrases, optimized for models like Midjourney.
 
-**Immediate Impact**: Image achieves intended emotional/informational response within 5 seconds
-**Audience Alignment**: Target demographic engages as predicted
-**Technical Excellence**: Meets all quality and platform requirements
-**Goal Achievement**: Measurably advances intended purpose
-**Longevity**: Remains effective and appropriate over time
+**Example Final Prompt (for "a cat in a field"):**
+*A stunning, photorealistic shot of a ginger tabby cat lounging peacefully in a sun-drenched field of lavender and wildflowers. The camera is at a low angle, capturing the cat's relaxed expression in sharp focus, with a soft, bokeh background of rolling green hills under a golden hour sky. The lighting is warm and gentle, casting long shadows and highlighting the cat's fur. Cinematic, serene, and incredibly detailed. --ar 16:9 --style raw*
 
----
-
-## FINAL PRINCIPLE
-
-**"Great image prompts don't just describe what to show—they architect how viewers will think and feel when they see it."**
-
-The framework succeeds when someone can take your prompt, execute it with reasonable skill, and produce an image that not only looks good but actually works to achieve its intended purpose in the real world.
+Now, based on the user's idea and directives, generate the master prompt.
