@@ -93,9 +93,8 @@ export default async function handler(req, res) {
             }
             res.status(200).json(jsonOutput);
         } else {
-            // Default to returning the text directly if not a specific JSON format
-            res.setHeader('Content-Type', 'text/plain');
-            res.status(200).send(enhancedPrompt);
+            // Default to the simple JSON format if no specific structure is requested.
+            res.status(200).json({ prompt: enhancedPrompt });
         }
 
     } catch (error) {
