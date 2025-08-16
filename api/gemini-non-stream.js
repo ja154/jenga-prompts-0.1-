@@ -42,18 +42,18 @@ export default async function handler(req, res) {
 
         const ai = new GoogleGenAI({ apiKey });
 
-        // Build the final prompt that will be sent to the AI
-        const finalPrompt = buildFinalPrompt(mode, options, userPrompt);
+        // Build the system instruction
+        const systemInstruction = buildSystemInstruction(mode, options);
 
         const isSimpleJson = options.outputStructure === 'Simple JSON';
         const isDetailedJson = options.outputStructure === 'Detailed JSON';
 
         const request = {
             model: 'gemini-1.5-flash',
-            contents: [{ role: "user", parts: [{ text: finalPrompt }] }],
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
             systemInstruction: {
                 role: "system",
-                parts: [{ text: "You are a world-class prompt engineer, a specialist in crafting detailed, effective prompts for AI models." }]
+                parts: [{ text: systemInstruction }]
             },
             generationConfig: {
                 temperature: 0.7,
@@ -82,6 +82,8 @@ export default async function handler(req, res) {
         if (isSimpleJson) {
             res.status(200).json({ prompt: enhancedPrompt });
         } else if (isDetailedJson) {
+            // For detailed JSON, we might want to extract more than just the prompt in the future.
+            // For now, we return the prompt and the parameters used.
             const jsonOutput = {
                 prompt: enhancedPrompt,
                 parameters: { mode, ...options }
@@ -91,7 +93,9 @@ export default async function handler(req, res) {
             }
             res.status(200).json(jsonOutput);
         } else {
-            res.status(200).json({ prompt: enhancedPrompt });
+            // Default to returning the text directly if not a specific JSON format
+            res.setHeader('Content-Type', 'text/plain');
+            res.status(200).send(enhancedPrompt);
         }
 
     } catch (error) {
@@ -107,94 +111,86 @@ export default async function handler(req, res) {
     }
 }
 
-const buildFinalPrompt = (mode, options, userPrompt) => {
-    const baseInstruction = `Your task is to take the user's basic idea and transform it into a "master prompt" optimized for a specific AI modality. The final output should ONLY be the enhanced prompt itself, with no additional text, commentary, or markdown formatting unless specified by the output format.`;
+// This function is now aligned with the streaming API's version
+function buildSystemInstruction(mode, options) {
+    let baseInstruction = `You are a world-class prompt engineer. Your mission is to expand a user's simple idea into a rich, detailed, and highly effective prompt for a generative AI model. The generated prompt should be a masterpiece of clarity and descriptive power.`;
 
-    let finalPrompt = `${baseInstruction}\n\n**Core Idea:** "${userPrompt}"\n\n`;
+    // This condition might need adjustment based on how JSON outputs are handled.
+    // If JSON output is requested, we assume the final output should still be a clean prompt *inside* the JSON.
+    if (options.outputStructure === 'Descriptive Paragraph' || options.outputStructure === 'Detailed JSON' || options.outputStructure === 'Simple JSON') {
+       baseInstruction += ` Do not add any conversational text, prefixes, or explanations. Only output the final prompt itself.`;
+    }
+
+    let modeInstruction = '';
+    let paramsToIncorporate = '';
+
+    const addParam = (label, value) => {
+        if (value) {
+            paramsToIncorporate += `- **${label}**: ${value}\n`;
+        }
+    };
+
+    try {
+        const frameworkFile = mode === 'Image' ? 'image-prompt-framework.md' :
+                              mode === 'Video' ? 'video-prompt-framework.md' : '';
+        if (frameworkFile) {
+            const frameworkPath = path.join(process.cwd(), 'src', frameworkFile);
+            modeInstruction = fs.readFileSync(frameworkPath, 'utf-8');
+        } else {
+            modeInstruction = `Generate a high-quality prompt for the ${mode} modality.`;
+        }
+    } catch (error) {
+        console.error(`Error reading ${mode} prompt framework:`, error);
+        modeInstruction = `Generate a high-quality prompt for the ${mode} modality.`;
+    }
 
     switch (mode) {
-        case 'Video':
-            try {
-                const frameworkPath = path.join(process.cwd(), 'src', 'video-prompt-framework.md');
-                const frameworkText = fs.readFileSync(frameworkPath, 'utf-8');
-                finalPrompt = frameworkText + `\n\n**Core Idea:** "${userPrompt}"\n\n**Directives:**\n- Content Tone: ${options.contentTone}\n- Point of View: ${options.pov}\n- Quality: ${options.resolution}`;
-            } catch (error) {
-                console.error('Error reading video prompt framework:', error);
-                // Fallback to old prompt
-                finalPrompt += `
-                **Modality: Video Generation (e.g., Sora, Veo, Runway)**
-                **Task:** Write a "master prompt" as a single, dense paragraph (150-250 words) that functions as a detailed screenplay shot description for an 8-second video. It must be evocative, precise, and describe a complete micro-narrative.
-                **Directives:**
-                - Content Tone: ${options.contentTone}
-                - Point of View: ${options.pov}
-                - Quality: ${options.resolution}
-                - **Key Requirements:** Establish a narrative arc (beginning, middle, end). Be visually explicit about subjects, actions, environment, and cinematography. Define the atmosphere with powerful adjectives.
-                **Output Format:** A single paragraph starting directly with the description.`;
-            }
-            break;
-
         case 'Image':
-            try {
-                const frameworkPath = path.join(process.cwd(), 'src', 'image-prompt-framework.md');
-                const frameworkText = fs.readFileSync(frameworkPath, 'utf-8');
-                finalPrompt = frameworkText + `\n\n**Core Idea:** "${userPrompt}"\n\n**Directives:**\n- Style: ${options.imageStyle}\n- Tone & Mood: ${options.contentTone}\n- Lighting: ${options.lighting}\n- Framing: ${options.framing}\n- Camera Angle: ${options.cameraAngle}\n- Quality: ${options.resolution}\n- Aspect Ratio: ${options.aspectRatio}\n- Additional Details: "${options.additionalDetails}"`;
-            } catch (error) {
-                console.error('Error reading image prompt framework:', error);
-                // Fallback to old prompt
-                finalPrompt += `
-                **Modality: Image Generation (e.g., Imagen, Midjourney, DALL-E)**
-                **Task:** Transform the user's concept into an extremely dense, comma-separated list of keywords and phrases. The prompt should be rich in technical and artistic terms.
-                **Directives:**
-                - Style: ${options.imageStyle}
-                - Tone & Mood: ${options.contentTone}
-                - Lighting: ${options.lighting}
-                - Framing: ${options.framing}
-                - Camera Angle: ${options.cameraAngle}
-                - Quality: ${options.resolution}
-                - Aspect Ratio: ${options.aspectRatio}
-                - Additional Details: "${options.additionalDetails}"
-                **Key Requirements:** Use descriptive keywords, not full sentences. Incorporate professional terminology from photography and art.
-                **Output Format:** A single, comma-separated string of keywords.`;
-            }
+            addParam('Style', options.imageStyle);
+            addParam('Mood/Tone', options.contentTone);
+            addParam('Lighting', options.lighting);
+            addParam('Framing', options.framing);
+            addParam('Camera Angle', options.cameraAngle);
+            addParam('Detail Level', options.resolution);
+            addParam('Aspect Ratio', options.aspectRatio);
+            addParam('Additional Specifics', options.additionalDetails);
             break;
-
+        case 'Video':
+            addParam('Tone', options.contentTone);
+            addParam('Point of View', options.pov);
+            addParam('Detail Level', options.resolution);
+            break;
         case 'Text':
-            finalPrompt += `
-            **Modality: Text Generation (Large Language Models, e.g., Gemini, GPT-4)**
-            **Task:** Refine the user's prompt to be more specific, structured, and effective for an LLM. Clarify intent, add constraints, and define the desired output format.
-            **Directives:**
-            - Tone: ${options.contentTone}
-            - Desired Output Format: ${options.outputFormat}
-            **Key Requirements:** Enhance the original prompt by adding context, specifying a persona for the AI, providing examples (if applicable), and setting clear boundaries to prevent vague responses.
-            **Output Format:** The complete, enhanced text prompt.`;
+            addParam('Tone of Voice', options.contentTone);
+            addParam('Desired Output Format', options.outputFormat);
             break;
-
         case 'Audio':
-            finalPrompt += `
-            **Modality: Audio Generation (e.g., Suno, ElevenLabs)**
-            **Task:** Create a rich, descriptive prompt for generating audio.
-            **Directives:**
-            - Audio Type: ${options.audioType}
-            - Vibe / Mood: ${options.audioVibe}
-            - Tone: ${options.contentTone}
-            **Key Requirements:** If music, describe genre, tempo, instrumentation, and vocals. If speech, describe the speaker's voice, emotion, and pacing. If SFX, describe the sound's characteristics and environment.
-            **Output Format:** A descriptive paragraph.`;
+            addParam('Audio Type', options.audioType);
+            addParam('Vibe/Mood', options.audioVibe);
+            addParam('Overall Tone', options.contentTone);
             break;
-
         case 'Code':
-            finalPrompt += `
-            **Modality: Code Generation (e.g., Copilot, CodeWhisperer)**
-            **Task:** Convert a natural language request into a precise and clear instruction for a code generation model.
-            **Directives:**
-            - Programming Language: ${options.codeLanguage}
-            - Task: ${options.codeTask}
-            **Key Requirements:** Be unambiguous. Specify function names, parameters, expected return values, and logic. If debugging, provide the broken code and describe the error. If refactoring, state the goals.
-            **Output Format:** A well-commented, clear, and actionable prompt.`;
-            break;
-
-        default:
-            finalPrompt += `Please enhance this prompt to be more effective.`;
+            addParam('Language', options.codeLanguage);
+            addParam('Task', options.codeTask);
             break;
     }
-    return finalPrompt;
-};
+
+    let finalSystemInstruction = `${baseInstruction}\n\n### Framework and Task\n${modeInstruction}`;
+
+    if (paramsToIncorporate) {
+        const guidance = `
+---
+## GUIDANCE & CONSTRAINTS
+
+Before you begin, you must integrate the following user-defined parameters into your creative process. These are not optional. Weave them naturally into the final prompt you generate.
+
+### Core Parameters
+${paramsToIncorporate}
+---
+`;
+        const taskMarker = "## FINAL PROMPT GENERATION TASK";
+        finalSystemInstruction = finalSystemInstruction.replace(taskMarker, `${guidance}\n${taskMarker}`);
+    }
+
+    return finalSystemInstruction;
+}
