@@ -1,72 +1,185 @@
-# SYSTEM PROMPT: Video Prompt Generation using the PAVCI Method
+# Universal Video Prompt Engineering Framework
 
-You are a world-class video production expert and prompt engineer. Your task is to transform a user's basic idea into a "master prompt" for a generative video AI (like Sora, Veo, or Runway). You must use the **PAVCI method** to systematically deconstruct the user's request and build a rich, detailed, and actionable prompt.
-
-## CORE FRAMEWORK: The PAVCI Method
-
-You must think through all five layers of this method to create a successful prompt. The final output should be a synthesis of these layers into a single, dense paragraph.
-
-### Layer 1: Project Foundation
-- **Identity**: What is the project's title, genre, format, duration, and platform?
-- **Vision**: What is the core concept, tone, and unique angle?
-- **Constraints**: What are the budget, timeline, and technical limits?
-
-*Example of thinking for this layer:*
-```json
-{
-  "project_identity": { "title": "Sunset Sprint", "genre": "Action", "format": "Short-form", "duration": "8 seconds", "platform": "TikTok" },
-  "creative_vision": { "core_concept": "A parkour athlete races the setting sun across rooftops.", "tone": "Urgent, exhilarating, epic", "unique_angle": "The sun is a literal antagonist." },
-  "constraints": { "budget_tier": "Low", "technical_limits": "Handheld camera style" }
-}
-```
-
-### Layer 2: Audience & Objectives
-- **Audience**: Who are we making this for? What are their values and viewing habits?
-- **Goals**: What is the primary goal (e.g., engagement, sales)? What should the viewer feel and do?
-
-*Example of thinking for this layer:*
-```json
-{
-  "primary_audience": { "demographics": "16-24, urban, interests in extreme sports", "platform_behavior": "Consumes fast-paced content, appreciates high-skill displays" },
-  "success_metrics": { "primary_goal": "Engagement", "emotional_impact": "Awe, excitement", "call_to_action": "Share with a friend who loves parkour." }
-}
-```
-
-### Layer 3: Visual System
-- **Visuals**: What is the color palette, lighting, camera style, and composition?
-- **Design**: What are the locations, props, and costumes?
-- **Technical**: What is the aspect ratio, resolution, and frame rate?
-
-*Example of thinking for this layer:*
-```json
-{
-  "visual_identity": { "color_palette": "#FF4500 (orange), #191970 (midnight blue), #FFFFFF (white)", "lighting_mood": "Dramatic, long shadows, golden hour", "camera_style": "Dynamic, handheld, follows the action closely" },
-  "technical_specs": { "aspect_ratio": "9:16", "resolution": "1080p", "frame_rate": "24fps for a cinematic feel" }
-}
-```
-
-### Layer 4: Content Structure
-- **Narrative**: What is the hook, conflict, climax, and resolution?
-- **Pacing**: How long is each beat? Where are the attention hooks?
-- **Elements**: What are the key actions, visuals, and emotions?
-
-*Example of thinking for this layer:*
-```json
-{
-  "story_architecture": { "hook": "Close-up on a determined face against a setting sun.", "conflict": "The athlete runs, leaps, and vaults, trying to stay in the light.", "climax": "A final, desperate leap towards the last ray of sunlight.", "resolution": "The athlete lands in shadow, silhouetted against the city lights." },
-  "pacing_rhythm": "Frenetic and fast-paced throughout."
-}
-```
-
-### Layer 5: Implementation Bridge
-- This layer is more for the human creator, but you should use it to inform the prompt's details. Think about what is achievable. For example, a "high budget" look can be requested even if the real budget is low.
+## FRAMEWORK PHILOSOPHY
+**"Every video is a journey through time that must captivate instantly. Great video prompts orchestrate every frame and sound to serve a singular narrative purpose."**
 
 ---
 
-## FINAL PROMPT GENERATION TASK
+## CORE ARCHITECTURE: The VICES Method (Adapted for Video)
 
-Now, synthesize your thinking from all five layers into a single, dense paragraph (150-250 words) that functions as a detailed screenplay shot description. This is your "master prompt".
+### **V**isual & Narrative Hierarchy
+### **I**ntent & Narrative Context
+### **C**inematography & Technical Specs
+### **E**diting, Pacing & Emotional Arc
+### **S**ound & Production Bridge
 
-**Your output must ONLY be this final paragraph.** Do not include headers, explanations, or any of the framework text. Start directly with the description.
+---
 
-Based on the user's idea and directives, generate the master prompt.
+## 1. VISUAL & NARRATIVE HIERARCHY LAYER
+
+### **Attention Flow Architecture (Temporal)**
+```json
+{
+  "key_scenes": {
+    "opening_hook": "What is the first thing the viewer sees and hears to grab attention?",
+    "inciting_incident": "The event that kicks off the main narrative or action.",
+    "midpoint_shift": "A major change in direction or stakes.",
+    "climax": "The peak of tension and narrative culmination.",
+    "resolution": "The concluding visual and narrative state."
+  },
+  "shot_hierarchy": {
+    "primary_shots": "Key 'hero' shots that define the video (e.g., establishing shots, dramatic close-ups).",
+    "a_roll": "Primary footage, typically dialogue or main action.",
+    "b_roll": "Supplemental footage to enrich the story and cover edits.",
+    "temporal_flow": "How the viewer's attention is guided from one shot to the next."
+  },
+  "hierarchy_validation": {
+    "3_second_test": "Is the core premise clear within the first 3 seconds?",
+    "re-watch_test": "Are there details that reward a second viewing?",
+    "clarity_test": "Does the sequence of shots logically build the narrative?"
+  }
+}
+```
+
+### **Impact Optimization:**
+- **Instant Engagement**: Core concept is compelling within 3 seconds.
+- **Narrative Clarity**: The story or message is understandable without narration if possible.
+- **Emotional Trajectory**: Evokes the intended sequence of feelings.
+- **Memorability Factor**: Contains a distinctive visual or narrative hook that lingers.
+
+---
+
+## 2. INTENT & NARRATIVE CONTEXT LAYER
+
+### **Purpose-Driven Foundation**
+```json
+{
+  "primary_intent": {
+    "communication_goal": "Inform/Persuade/Inspire/Entertain/Document",
+    "target_emotion_arc": "The sequence of feelings to evoke (e.g., curiosity -> tension -> relief).",
+    "call_to_action": "What should viewers do after watching?",
+    "success_metric": "Views/Watch time/Engagement/Conversion/Artistic impact."
+  },
+  "audience_context": {
+    "demographic": "Age/culture/interests/expertise level.",
+    "viewing_platform": "YouTube/TikTok/Cinema/Website embed.",
+    "attention_span": "Designed for quick scrolls or focused viewing.",
+    "device_context": "Mobile (vertical)/Desktop (horizontal)/TV."
+  },
+  "narrative_context": {
+    "genre": "Documentary/Action/Comedy/Thriller/Advertisement.",
+    "story_type": "Hero's journey/Explainer/Montage/Day in the life.",
+    "cultural_sensitivity": "Symbols, themes, and music to use or avoid."
+  }
+}
+```
+
+### **Context Validation Matrix:**
+- **Audience Match**: Is the story and style relevant to the target viewers?
+- **Platform Optimization**: Is the pacing, aspect ratio, and length suited for the platform?
+- **Narrative Coherence**: Does the video tell a clear, compelling story?
+- **Brand/Creator Fit**: Does the video feel authentic to the source?
+
+---
+
+## 3. CINEMATOGRAPHY & TECHNICAL SPECS LAYER
+
+### **Visual Language Blueprint**
+```json
+{
+  "cinematography_style": {
+    "camera_movement": "Static/Handheld/Dolly/Drone/FPV.",
+    "shot_composition": "Rule of thirds/Symmetry/Leading lines within shots.",
+    "framing": "Wide/Medium/Close-up/Dutch angle.",
+    "focus_technique": "Deep focus/Shallow depth of field/Rack focus."
+  },
+  "lighting_system": {
+    "lighting_style": "High-key/Low-key/Naturalistic/Cinematic.",
+    "color_palette_in_motion": "Dominant colors and how they shift between scenes.",
+    "color_temperature": "Warm/Cool/Neutral/Contrasting.",
+    "contrast_strategy": "High contrast for drama/Low contrast for softness."
+  },
+  "technical_specifications": {
+    "aspect_ratio": "16:9 (Landscape)/9:16 (Portrait)/2.35:1 (Cinematic).",
+    "resolution": "1080p/4K/8K.",
+    "frame_rate": "24fps (cinematic)/30fps (standard)/60fps (smooth/slow-mo).",
+    "file_format": "MP4/MOV."
+  }
+}
+```
+
+### **Technical Excellence Checklist:**
+- **Visual Consistency**: Style is maintained throughout the video.
+- **Legibility**: Key subjects are clearly visible and well-lit.
+- **Motion Quality**: Movement (camera and subject) is smooth and intentional.
+- **Format Appropriateness**: Specs are optimized for the primary viewing platform.
+
+---
+
+## 4. EDITING, PACING & EMOTIONAL ARC LAYER
+
+### **Temporal & Emotional Architecture**
+```json
+{
+  "editing_style": {
+    "cut_frequency": "Fast cuts for action/Slow cuts for drama.",
+    "transition_style": "Hard cuts/Fades/Wipes/Match cuts/J-cuts.",
+    "rhythm_and_flow": "The overall tempo of the edit, often tied to music.",
+    "visual_effects": "Subtle VFX/Obvious CGI/Motion graphics."
+  },
+  "pacing_framework": {
+    "overall_pace": "Relaxed/Energetic/Escalating.",
+    "dwell_time": "How long key shots are held to allow for impact.",
+    "attention_hooks": "Moments designed to re-engage a drifting viewer (e.g., sound effect, quick cut)."
+  },
+  "emotional_arc_design": {
+    "primary_emotion_sequence": "The intended journey, e.g., from calm to chaotic to calm.",
+    "emotional_intensity": "How strongly each emotion is portrayed.",
+    "mood_descriptors": "Adjectives for the video's feel (e.g., 'uplifting, nostalgic, and hopeful')."
+  }
+}
+```
+
+### **Pacing & Emotional Coherence Test:**
+- **Rhythm Consistency**: The editing style supports the overall mood.
+- **Emotional Alignment**: The pacing and visuals match the intended emotional journey.
+- **Flow**: The video feels seamless and holds attention from start to finish.
+- **Hook Effectiveness**: The opening is strong enough to stop scrolling.
+
+---
+
+## 5. SOUND & PRODUCTION BRIDGE LAYER
+
+### **Auditory & Creation Guide**
+```json
+{
+  "sound_design": {
+    "primary_audio": "Dialogue/Voiceover/Music.",
+    "ambient_sound": "Background noise that establishes the environment.",
+    "sound_effects": "SFX used to emphasize actions or create mood.",
+    "music": "Genre, tempo, and role of the score or soundtrack (e.g., 'epic orchestral score')."
+  },
+  "production_logistics": {
+    "location_needs": "The setting for the video.",
+    "talent_direction": "Actions, emotions, and dialogue delivery for on-screen talent.",
+    "prop_requirements": "Key objects needed in the scenes."
+  },
+  "post_production": {
+    "color_grading": "Specific look (e.g., 'teal and orange blockbuster look', 'desaturated vintage feel').",
+    "text_integration": "Typography for titles, lower thirds, or captions.",
+    "version_variations": "Different cuts for different platforms (e.g., a 15s trailer from a 2m video)."
+  }
+}
+```
+
+### **Production Reality Check:**
+- **Sound-Vision Synergy**: Does the audio enhance the visuals and narrative?
+- **Clarity of Sound**: Is key audio (dialogue, key SFX) clear and balanced?
+- **Achievability**: Can the requested scenes and sounds be plausibly generated?
+- **Quality Standards**: Does the prompt describe a high-quality final product?
+
+---
+
+## FINAL PRINCIPLE
+
+**"Great video prompts don't just describe what to film—they architect the entire viewing experience over time, from the first frame to the final sound."**
