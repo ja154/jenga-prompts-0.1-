@@ -92,10 +92,10 @@ export default async function handler(req, res) {
 }
 
 function buildSystemInstruction(mode, options) {
-    let instruction = `You are a world-class prompt engineer. Your mission is to expand a user's simple idea into a rich, detailed, and highly effective prompt for a generative AI model. The generated prompt should be a masterpiece of clarity and descriptive power.`;
+    let baseInstruction = `You are a world-class prompt engineer. Your mission is to expand a user's simple idea into a rich, detailed, and highly effective prompt for a generative AI model. The generated prompt should be a masterpiece of clarity and descriptive power.`;
     
     if (options.outputStructure === 'Descriptive Paragraph') {
-       instruction += ` Do not add any conversational text, prefixes, or explanations. Only output the final prompt.`;
+       baseInstruction += ` Do not add any conversational text, prefixes, or explanations. Only output the final prompt.`;
     }
 
     let modeInstruction = '';
@@ -103,20 +103,29 @@ function buildSystemInstruction(mode, options) {
 
     const addParam = (label, value) => {
         if (value) {
-            paramsToIncorporate += `- ${label}: ${value}\n`;
+            paramsToIncorporate += `- **${label}**: ${value}\n`;
         }
     };
 
+    // Load the appropriate framework content from the markdown file
+    try {
+        const frameworkFile = mode === 'Image' ? 'image-prompt-framework.md' :
+                              mode === 'Video' ? 'video-prompt-framework.md' : '';
+        if (frameworkFile) {
+            const frameworkPath = path.join(process.cwd(), 'src', frameworkFile);
+            modeInstruction = fs.readFileSync(frameworkPath, 'utf-8');
+        } else {
+            // Fallback for other modes
+            modeInstruction = `Generate a high-quality prompt for the ${mode} modality.`;
+        }
+    } catch (error) {
+        console.error(`Error reading ${mode} prompt framework:`, error);
+        modeInstruction = `Generate a high-quality prompt for the ${mode} modality.`;
+    }
+
+    // Collect all relevant parameters
     switch (mode) {
         case 'Image':
-            try {
-                const frameworkPath = path.join(process.cwd(), 'src', 'image-prompt-framework.md');
-                modeInstruction = fs.readFileSync(frameworkPath, 'utf-8');
-            } catch (error) {
-                console.error('Error reading image prompt framework:', error);
-                // Fallback to old instruction
-                modeInstruction = `The target model is a state-of-the-art AI image generator. Weave the following parameters into a fluid, descriptive paragraph. Do not just list them. The prompt should paint a vivid picture for the AI.`;
-            }
             addParam('Style', options.imageStyle);
             addParam('Mood/Tone', options.contentTone);
             addParam('Lighting', options.lighting);
@@ -127,43 +136,42 @@ function buildSystemInstruction(mode, options) {
             addParam('Additional Specifics', options.additionalDetails);
             break;
         case 'Video':
-            try {
-                const frameworkPath = path.join(process.cwd(), 'src', 'video-prompt-framework.md');
-                modeInstruction = fs.readFileSync(frameworkPath, 'utf-8');
-            } catch (error) {
-                console.error('Error reading video prompt framework:', error);
-                // Fallback to old instruction
-                modeInstruction = `The target model is a state-of-the-art AI video generator. Describe a continuous scene, focusing on motion, atmosphere, and visual storytelling.`;
-            }
             addParam('Tone', options.contentTone);
             addParam('Point of View', options.pov);
             addParam('Detail Level', options.resolution);
             break;
         case 'Text':
-            modeInstruction = `The target is a large language model. Your goal is to refine the user's request into a crystal-clear and effective prompt for generating text.`;
             addParam('Tone of Voice', options.contentTone);
             addParam('Desired Output Format', options.outputFormat);
             break;
         case 'Audio':
-            modeInstruction = `The target model is an AI audio/music generator. Describe the sound in detail, including instrumentation, tempo, and emotional feeling.`;
             addParam('Audio Type', options.audioType);
             addParam('Vibe/Mood', options.audioVibe);
             addParam('Overall Tone', options.contentTone);
             break;
         case 'Code':
-            modeInstruction = `The target model is a code generation AI. Create a precise and unambiguous prompt to accomplish the user's technical task. The prompt must provide sufficient context for the AI to generate, debug, or explain code correctly.`;
             addParam('Language', options.codeLanguage);
             addParam('Task', options.codeTask);
             break;
-        default:
-            modeInstruction = `Generate a general-purpose, high-quality prompt.`;
-            break;
     }
 
-    instruction += `\n\n### Task\n${modeInstruction}`;
+    let finalSystemInstruction = `${baseInstruction}\n\n### Framework and Task\n${modeInstruction}`;
+
+    // If there are parameters, inject them into the framework before the final task description
     if (paramsToIncorporate) {
-        instruction += `\n\n### Parameters to Incorporate\n${paramsToIncorporate}`;
+        const guidance = `
+---
+## GUIDANCE & CONSTRAINTS
+
+Before you begin, you must integrate the following user-defined parameters into your creative process. These are not optional. Weave them naturally into the final prompt you generate.
+
+### Core Parameters
+${paramsToIncorporate}
+---
+`;
+        const taskMarker = "## FINAL PROMPT GENERATION TASK";
+        finalSystemInstruction = finalSystemInstruction.replace(taskMarker, `${guidance}\n${taskMarker}`);
     }
 
-    return instruction;
+    return finalSystemInstruction;
 }
