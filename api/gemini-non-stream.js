@@ -128,25 +128,25 @@ const buildPromptFromFramework = (mode, options, userPrompt) => {
     systemInstruction += "\n\n" + goal;
     systemInstruction += "\n\nIMPORTANT: Your entire response must be a single, raw JSON object. Do not include any text, explanation, or markdown formatting before or after the JSON object.";
 
-    // --- Build User Instruction ---
-    let userInstruction = userInputStep.template.replace('{{userPrompt}}', userPrompt);
-
-    // Append directives if they exist
+    // Append directives to the system instruction
     if (modalityConfig.directives_template) {
-        let directives = "\n\n**Directives:**";
+        let directives = "\n\n**Directives to Follow:**";
         const template = modalityConfig.directives_template;
         let directivesAdded = false;
         for (const key in template) {
             const placeholder = template[key].replace(/[{}]/g, '');
             if (options[placeholder] && options[placeholder] !== 'Default') {
-                directives += `\n- ${key}: ${options[placeholder]}`;
+                directives += `\n- The user has specified '${key}' as: ${options[placeholder]}`;
                 directivesAdded = true;
             }
         }
         if (directivesAdded) {
-            userInstruction += directives;
+            systemInstruction += directives;
         }
     }
+
+    // --- Build User Instruction ---
+    let userInstruction = userInputStep.template.replace('{{userPrompt}}', userPrompt);
 
     return { systemInstruction, userInstruction };
 };
