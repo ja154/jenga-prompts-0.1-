@@ -15,11 +15,11 @@ const TemplatesGallery = ({ onUseTemplate }: TemplatesGalleryProps) => {
 
     return (
         <div className="mt-6">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">Templates Gallery</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Templates Gallery</h3>
             <div className="grid grid-cols-3 gap-4">
                 {templates.map((template, index) => (
-                    <div key={index} className="bg-slate-200 dark:bg-gray-700 p-4 rounded-lg text-center">
-                        <p className="text-sm font-medium text-slate-800 dark:text-white">{template.title}</p>
+                    <div key={index} className="bg-muted p-4 rounded-lg text-center">
+                        <p className="text-sm font-medium text-muted-foreground">{template.title}</p>
                     </div>
                 ))}
             </div>

@@ -17,12 +17,12 @@ const MediaTabs = ({ promptMode, setPromptMode }: MediaTabsProps) => {
 
     return (
         <div className="mb-6">
-            <div className="grid grid-cols-5 gap-1 p-1 bg-slate-200 dark:bg-gray-800 rounded-xl">
+            <div className="grid grid-cols-5 gap-1 p-1 bg-muted rounded-xl">
                 {modeOptions.map(({ mode, icon, label }) => (
                     <button
                         key={mode}
                         onClick={() => setPromptMode(mode)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-2 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${promptMode === mode ? 'bg-purple-600 text-white shadow-md' : 'text-slate-600 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-gray-700'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 px-2 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${promptMode === mode ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent'}`}
                         aria-pressed={promptMode === mode}
                     >
                         <i className={`fas ${icon} text-base`}></i>

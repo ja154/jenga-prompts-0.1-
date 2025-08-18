@@ -1,12 +1,12 @@
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 const Sidebar = () => {
     const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
-        `flex items-center p-2 text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md ${isActive ? 'bg-purple-100 dark:bg-purple-900' : ''}`;
+        `flex items-center p-2 text-sidebar-foreground hover:bg-sidebar-accent rounded-md ${isActive ? 'bg-sidebar-accent' : ''}`;
 
     return (
-        <aside className="w-64 bg-white dark:bg-gray-800 p-4 space-y-4 border-r border-slate-200 dark:border-slate-700">
+        <aside className="w-64 bg-sidebar text-sidebar-foreground p-4 space-y-4 border-r border-sidebar-border">
             <nav>
                 <ul>
                     <li className="mb-2">

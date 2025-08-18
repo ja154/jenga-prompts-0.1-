@@ -60,10 +60,10 @@ const Modifiers = (props: ModifiersProps) => {
 
     const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {label: string, value: string}[] | string[]) => (
         <div>
-            <label htmlFor={id} className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">{label}</label>
+            <label htmlFor={id} className="block text-sm font-medium text-foreground mb-2">{label}</label>
             <select
                 id={id}
-                className="w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                className="w-full bg-input-background border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                 value={value}
                 onChange={onChange}
                 aria-label={`Select ${label}`}
@@ -112,11 +112,11 @@ const Modifiers = (props: ModifiersProps) => {
                            {renderSelect("imageResolution", "Detail Level", imageResolution, (e) => setImageResolution(e.target.value as CameraResolution), CAMERA_RESOLUTION_OPTIONS)}
                         </div>
                         <div>
-                             <label htmlFor="additionalDetails" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Additional Details (Optional)</label>
+                             <label htmlFor="additionalDetails" className="block text-sm font-medium text-foreground mb-2">Additional Details (Optional)</label>
                              <input
                                 id="additionalDetails"
                                 type="text"
-                                className="w-full bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                className="w-full bg-input-background border border-border rounded-lg px-4 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                                 placeholder="E.g. turquoise rings, stark white background..."
                                 value={additionalDetails}
                                 onChange={(e) => setAdditionalDetails(e.target.value)}
@@ -163,8 +163,8 @@ const Modifiers = (props: ModifiersProps) => {
 
     return (
         <div className="mb-6 pt-4">
-            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Jenga Your Prompt</label>
-            <div className="p-4 bg-slate-200/50 dark:bg-gray-900/40 rounded-xl">
+            <label className="block text-sm font-medium text-foreground mb-2">Jenga Your Prompt</label>
+            <div className="p-4 bg-muted rounded-xl">
                 {renderModeOptions()}
             </div>
         </div>

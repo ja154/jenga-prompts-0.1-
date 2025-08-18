@@ -7,7 +7,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="flex h-screen bg-background">
             {/* Sidebar for desktop */}
             <div className="hidden lg:flex lg:flex-shrink-0">
                 <Sidebar />
