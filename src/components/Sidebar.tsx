@@ -6,7 +6,7 @@ const Sidebar = () => {
         `flex items-center p-2 text-sidebar-foreground hover:bg-sidebar-accent rounded-md ${isActive ? 'bg-sidebar-accent' : ''}`;
 
     return (
-        <aside className="w-64 bg-sidebar text-sidebar-foreground p-4 space-y-4 border-r border-sidebar-border">
+        <aside className="app-sidebar text-sidebar-foreground p-4 space-y-4">
             <nav>
                 <ul>
                     <li className="mb-2">
