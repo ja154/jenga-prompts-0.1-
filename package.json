@@ -12,7 +12,8 @@
     "build:api": "esbuild api/*.js --bundle --platform=node --outdir=dist/api",
     "build": "npm run build:api && tsc && vite build",
     "start:proxy": "node server.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "jest"
   },
   "dependencies": {
     "@google/genai": "^1.9.0",
@@ -23,6 +24,9 @@
     "react-router-dom": "^7.8.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.2.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -34,8 +38,11 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
+    "ts-jest": "^29.4.1",
     "typescript": "^5.4.5",
     "vite": "^5.3.5"
   }

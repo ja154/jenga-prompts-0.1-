@@ -16,6 +16,7 @@ const Generate = ({ isLoading, userPrompt, handleGenerateClick }: GenerateProps)
                 disabled={isLoading || !userPrompt.trim()}
                 className="w-full bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                 aria-live="polite"
+                data-testid="generate-button"
             >
                 {isLoading ? <i className="fas fa-spinner fa-spin mr-2"></i> : <i className="fas fa-magic mr-2"></i>}
                 {buttonText}
