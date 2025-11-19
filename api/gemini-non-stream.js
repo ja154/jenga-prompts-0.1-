@@ -48,8 +48,8 @@ export default async function handler(req, res) {
         const isSimpleJson = options.outputStructure === 'Simple JSON';
         const isDetailedJson = options.outputStructure === 'Detailed JSON';
 
-        const request = {
-            model: 'gemini-1.5-flash',
+        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: finalPrompt }] }],
             systemInstruction: {
                 role: "system",
@@ -60,19 +60,19 @@ export default async function handler(req, res) {
                 topP: 0.95,
                 topK: 40,
             }
-        };
+        });
 
-        const result = await ai.models.generateContent(request);
+        const response = result.response;
 
-        if (!result || !result.candidates || result.candidates.length === 0) {
-            console.error('Invalid response from Gemini API:', JSON.stringify(result, null, 2));
-            if (result.promptFeedback && result.promptFeedback.blockReason) {
-                throw new Error(`Request was blocked by the API. Reason: ${result.promptFeedback.blockReason}`);
+        if (!response || !response.candidates || response.candidates.length === 0) {
+            console.error('Invalid response from Gemini API:', JSON.stringify(response, null, 2));
+            if (response.promptFeedback && response.promptFeedback.blockReason) {
+                throw new Error(`Request was blocked by the API. Reason: ${response.promptFeedback.blockReason}`);
             }
             throw new Error('Invalid or empty response from Gemini API');
         }
 
-        const rawText = result.candidates[0].content.parts[0].text;
+        const rawText = response.candidates[0].content.parts[0].text;
         if (!rawText) {
             throw new Error('Empty response from Gemini API');
         }

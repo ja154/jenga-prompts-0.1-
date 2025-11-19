@@ -60,14 +60,14 @@ export default async function handler(req, res) {
             topK: 40,
         };
 
-        const response = await ai.models.generateContentStream({
-            model: 'gemini-2.5-flash',
-            contents: userPrompt,
-            config: config
+        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContentStream({
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            ...config,
         });
 
         // Stream the response
-        for await (const chunk of response.stream) {
+        for await (const chunk of result.stream) {
             const text = chunk.text();
             if (text) {
                 res.write(text);
