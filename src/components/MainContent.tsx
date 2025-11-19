@@ -3,7 +3,7 @@ import React from 'react';
 const MainContent = ({ children }: { children: React.ReactNode }) => {
     return (
         <main className="flex-1 overflow-y-auto">
-            <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+            <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full">
                 {children}
             </div>
         </main>
